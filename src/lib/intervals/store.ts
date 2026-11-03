@@ -8,12 +8,17 @@ import { setMuted } from "@/lib/audio";
 
 const STORAGE_KEY = "halfstep-v6";
 
-export type Topic = "intervals" | "chords" | "accidentals" | "scales" | "circle";
+export type Topic = "intervals" | "chords" | "accidentals" | "scales" | "circle" | "inversions";
+export type Activity = "flash" | "circle" | "scale-lesson" | "chord-lesson";
+export type FlashTopic = "intervals" | "chords" | "accidentals" | "scales" | "inversions";
+export const FLASH_TOPICS: FlashTopic[] = ["intervals", "chords", "accidentals", "scales", "inversions"];
 
 export interface DrillSettings {
   direction: Direction;
   range: Range;
   topic: Topic;
+  activity: Activity;
+  flashTopics: FlashTopic[];
   chordFilters: ChordFilter[];
   scaleFilters: ScaleFilter[];
   scaleMode: ScaleMode;
@@ -22,6 +27,7 @@ export interface DrillSettings {
   soundOn: boolean;
   autoAdvance: boolean;
   autoSeconds: number;
+  nightMode: boolean;
 }
 
 export interface DrillStats {
@@ -38,6 +44,9 @@ interface DrillState extends DrillSettings, DrillStats {
   setDirection: (direction: Direction) => void;
   setRange: (range: Range) => void;
   setTopic: (topic: Topic) => void;
+  setActivity: (activity: Activity) => void;
+  toggleFlashTopic: (topic: FlashTopic) => void;
+  setAllFlashTopics: (on: boolean) => void;
   toggleChordFilter: (filter: ChordFilter) => void;
   setAllChordFilters: (on: boolean) => void;
   toggleScaleFilter: (filter: ScaleFilter) => void;
@@ -48,6 +57,7 @@ interface DrillState extends DrillSettings, DrillStats {
   setSoundOn: (on: boolean) => void;
   setAutoAdvance: (on: boolean) => void;
   setAutoSeconds: (seconds: number) => void;
+  setNightMode: (on: boolean) => void;
   recordAnswer: (id: string, correct: boolean) => void;
 }
 
@@ -55,6 +65,8 @@ const defaults: DrillSettings & DrillStats = {
   direction: "both",
   range: "core",
   topic: "intervals",
+  activity: "flash",
+  flashTopics: ["intervals"],
   chordFilters: ["major", "minor"],
   scaleFilters: ["major", "minor", "natural-minor", "harmonic-minor"],
   scaleMode: "spell",
@@ -63,6 +75,7 @@ const defaults: DrillSettings & DrillStats = {
   soundOn: true,
   autoAdvance: true,
   autoSeconds: 2,
+  nightMode: false,
   reviewed: 0,
   correct: 0,
   streak: 0,
@@ -76,6 +89,8 @@ function persist(state: DrillState) {
     direction: state.direction,
     range: state.range,
     topic: state.topic,
+    activity: state.activity,
+    flashTopics: state.flashTopics,
     chordFilters: state.chordFilters,
     scaleFilters: state.scaleFilters,
     scaleMode: state.scaleMode,
@@ -84,6 +99,7 @@ function persist(state: DrillState) {
     soundOn: state.soundOn,
     autoAdvance: state.autoAdvance,
     autoSeconds: state.autoSeconds,
+    nightMode: state.nightMode,
     reviewed: state.reviewed,
     correct: state.correct,
     streak: state.streak,
@@ -93,10 +109,37 @@ function persist(state: DrillState) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
 }
 
+function applyNight(on: boolean) {
+  if (typeof document === "undefined") return;
+  document.documentElement.classList.toggle("dark", on);
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", on ? "#141210" : "#f3eee4");
+}
+
+function isFlashTopic(value: unknown): value is FlashTopic {
+  return value === "intervals" || value === "chords" || value === "accidentals" || value === "scales" || value === "inversions";
+}
+
 function clampSeconds(value: unknown): number {
   const n = typeof value === "number" ? value : 2;
   if (n < 0 || n > 5 || !Number.isInteger(n)) return 2;
   return n;
+}
+
+function readChordFilters(value: unknown): ChordFilter[] {
+  if (!Array.isArray(value) || value.length === 0) return defaults.chordFilters;
+  const next: ChordFilter[] = [];
+  for (const item of value) {
+    if (item === "seventh") {
+      for (const id of ["dom7", "maj7", "min7"] as const) {
+        if (!next.includes(id)) next.push(id);
+      }
+      continue;
+    }
+    if (typeof item === "string" && ALL_FILTERS.includes(item as ChordFilter) && !next.includes(item as ChordFilter)) {
+      next.push(item as ChordFilter);
+    }
+  }
+  return next.length ? next : defaults.chordFilters;
 }
 
 function parseStage(value: unknown): ParallelStage {
@@ -120,9 +163,7 @@ export const useDrillStore = create<DrillState>((set, get) => ({
         localStorage.getItem("halfstep-v1");
       if (raw) {
         const parsed = JSON.parse(raw) as Partial<DrillSettings & DrillStats>;
-        const filters = parsed.chordFilters?.length
-          ? parsed.chordFilters.filter((item): item is ChordFilter => ALL_FILTERS.includes(item))
-          : defaults.chordFilters;
+        const chordFilters = readChordFilters(parsed.chordFilters);
         const scaleFilters = parsed.scaleFilters?.length
           ? parsed.scaleFilters.filter((item): item is ScaleFilter => ALL_SCALE_FILTERS.includes(item))
           : defaults.scaleFilters;
@@ -130,16 +171,30 @@ export const useDrillStore = create<DrillState>((set, get) => ({
           parsed.topic === "chords" ||
           parsed.topic === "accidentals" ||
           parsed.topic === "scales" ||
-          parsed.topic === "circle"
+          parsed.topic === "circle" ||
+          parsed.topic === "inversions"
             ? parsed.topic
             : "intervals";
+        const activity =
+          parsed.activity === "circle" || parsed.activity === "scale-lesson" || parsed.activity === "chord-lesson"
+            ? parsed.activity
+            : parsed.topic === "circle"
+              ? "circle"
+              : parsed.topic === "scales" && parsed.scaleMode === "shift"
+                ? "scale-lesson"
+                : "flash";
+        const flashTopics = parsed.flashTopics?.filter(isFlashTopic);
+        const nightMode = parsed.nightMode === true;
         const soundOn = parsed.soundOn !== false;
         setMuted(!soundOn);
+        applyNight(nightMode);
         set({
           direction: parsed.direction ?? defaults.direction,
           range: parsed.range ?? defaults.range,
           topic,
-          chordFilters: filters.length ? filters : defaults.chordFilters,
+          activity,
+          flashTopics: flashTopics?.length ? flashTopics : isFlashTopic(topic) ? [topic] : defaults.flashTopics,
+          chordFilters,
           scaleFilters: scaleFilters.length ? scaleFilters : defaults.scaleFilters,
           scaleMode: parsed.scaleMode === "shift" ? "shift" : "spell",
           parallelStage: parseStage(parsed.parallelStage),
@@ -147,6 +202,7 @@ export const useDrillStore = create<DrillState>((set, get) => ({
           soundOn,
           autoAdvance: parsed.autoAdvance !== false,
           autoSeconds: clampSeconds(parsed.autoSeconds),
+          nightMode,
           reviewed: parsed.reviewed ?? 0,
           correct: parsed.correct ?? 0,
           streak: parsed.streak ?? 0,
@@ -171,6 +227,20 @@ export const useDrillStore = create<DrillState>((set, get) => ({
   },
   setTopic: (topic) => {
     set({ topic });
+    persist(get());
+  },
+  setActivity: (activity) => {
+    set({ activity });
+    persist(get());
+  },
+  toggleFlashTopic: (topic) => {
+    const current = get().flashTopics;
+    const next = current.includes(topic) ? current.filter((item) => item !== topic) : [...current, topic];
+    set({ flashTopics: next, activity: "flash" });
+    persist(get());
+  },
+  setAllFlashTopics: (on) => {
+    set({ flashTopics: on ? [...FLASH_TOPICS] : [], activity: "flash" });
     persist(get());
   },
   toggleChordFilter: (filter) => {
@@ -216,6 +286,11 @@ export const useDrillStore = create<DrillState>((set, get) => ({
   },
   setAutoSeconds: (seconds) => {
     set({ autoSeconds: clampSeconds(seconds) });
+    persist(get());
+  },
+  setNightMode: (nightMode) => {
+    applyNight(nightMode);
+    set({ nightMode });
     persist(get());
   },
   recordAnswer: (id, correct) => {

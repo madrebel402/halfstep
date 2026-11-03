@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { accidentalGlyph, type Letter } from "@/lib/intervals/catalog";
 import { SCALE_LETTERS } from "@/lib/keys/catalog";
 import type { KeyBonus, KeyQuestion, KeyResult } from "@/lib/keys/quiz";
+import { cardPlace, type DeckPlace } from "@/lib/deck";
 import { useDrillStore } from "@/lib/intervals/store";
 import { useAutoAdvance } from "@/lib/use-auto-advance";
 import { cn } from "@/lib/utils";
@@ -18,14 +19,17 @@ const COUNT_OPTIONS = Array.from({ length: 8 }, (_, value) => ({ value: String(v
 
 export function KeysDrill({
   cards,
+  deck,
   onExit,
   onDone,
 }: {
   cards: KeyQuestion[];
+  deck?: DeckPlace;
   onExit: () => void;
   onDone: (results: KeyResult[]) => void;
 }) {
   const [index, setIndex] = useState(0);
+  const place = cardPlace(index, cards.length, deck);
   const [wrongPicks, setWrongPicks] = useState<string[]>([]);
   const [phase, setPhase] = useState<Phase>("ask");
   const [selected, setSelected] = useState<Letter[]>([]);
@@ -164,14 +168,14 @@ export function KeysDrill({
 
       <div className="mt-3 flex shrink-0 items-center justify-between text-xs tabular-nums text-muted-foreground">
         <span>
-          {index + 1} / {cards.length}
+          {place.current} / {place.total}
         </span>
         <span>{streak > 0 ? `Streak ${streak}` : " "}</span>
       </div>
       <div className="mt-2 h-1 shrink-0 overflow-hidden rounded-full bg-secondary">
         <div
           className="h-full rounded-full bg-foreground transition-[width] duration-200 ease-out"
-          style={{ width: `${(index / cards.length) * 100}%` }}
+          style={{ width: place.width }}
         />
       </div>
 
@@ -308,7 +312,7 @@ export function KeysDrill({
               </Button>
             ) : null}
             <Button size="lg" className="h-12 flex-1 rounded-lg" onClick={goNext}>
-              {index + 1 >= cards.length ? "See results" : "Next card"}
+              {place.last ? "See results" : "Next card"}
             </Button>
           </div>
         ) : null}
@@ -332,7 +336,7 @@ export function KeysDrill({
 
         {phase === "bonus-solved" ? (
           <Button size="lg" className="h-12 w-full rounded-lg" onClick={goNext}>
-            {index + 1 >= cards.length ? "See results" : "Next card"}
+            {place.last ? "See results" : "Next card"}
           </Button>
         ) : null}
       </div>

@@ -1,19 +1,21 @@
 import { useRef, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
+import { NoteRow, alterFill, alterMotion } from "@/components/altered-note";
 import { CorrectBurst } from "@/components/correct-burst";
 import { NoteKeypad } from "@/components/keypad";
 import { Button } from "@/components/ui/button";
 import {
   CHORD_BY_ID,
-  notesPhrase,
   QUALITY_META,
   qualitiesFor,
   SLOT_LABELS,
+  type ChordFilter,
   type ChordQuality,
 } from "@/lib/chords/catalog";
 import type { ChordQuestion, ChordResult } from "@/lib/chords/quiz";
 import { accidentalGlyph, type Letter } from "@/lib/intervals/catalog";
+import { cardPlace, type DeckPlace } from "@/lib/deck";
 import { useDrillStore } from "@/lib/intervals/store";
 import { useAutoAdvance } from "@/lib/use-auto-advance";
 import { cn } from "@/lib/utils";
@@ -34,14 +36,19 @@ function emptySlots(count: number): Slot[] {
 
 export function ChordDrill({
   cards,
+  deck,
+  filters,
   onExit,
   onDone,
 }: {
   cards: ChordQuestion[];
+  deck?: DeckPlace;
+  filters?: ChordFilter[];
   onExit: () => void;
   onDone: (results: ChordResult[]) => void;
 }) {
   const [index, setIndex] = useState(0);
+  const place = cardPlace(index, cards.length, deck);
   const [slots, setSlots] = useState<Slot[]>(emptySlots(cards[0]?.chord.notes.length ?? 3));
   const [focused, setFocused] = useState(0);
   const [marks, setMarks] = useState<Mark[]>(slots.map(() => null));
@@ -54,8 +61,8 @@ export function ChordDrill({
   const recordAnswer = useDrillStore((s) => s.recordAnswer);
   const streak = useDrillStore((s) => s.streak);
   const skipCorrect = useAutoAdvance(solved, goNext);
-  const filters = useDrillStore((s) => s.chordFilters);
-  const qualityButtons = qualitiesFor(filters.length ? filters : ["major", "minor"]);
+  const storedFilters = useDrillStore((s) => s.chordFilters);
+  const qualityButtons = qualitiesFor((filters ?? storedFilters).length ? (filters ?? storedFilters) : ["major", "minor"]);
 
   const question = cards[index];
   const build = question.kind === "build";
@@ -236,14 +243,14 @@ export function ChordDrill({
 
       <div className="mt-3 flex shrink-0 items-center justify-between text-xs tabular-nums text-muted-foreground">
         <span>
-          {index + 1} / {cards.length}
+          {place.current} / {place.total}
         </span>
         <span>{streak > 0 ? `Streak ${streak}` : " "}</span>
       </div>
       <div className="mt-2 h-1 shrink-0 overflow-hidden rounded-full bg-secondary">
         <div
           className="h-full rounded-full bg-foreground transition-[width] duration-200 ease-out"
-          style={{ width: `${(index / cards.length) * 100}%` }}
+          style={{ width: place.width }}
         />
       </div>
 
@@ -255,7 +262,9 @@ export function ChordDrill({
           {build ? (
             <h2 className="mt-2 font-display text-2xl leading-snug tracking-tight">{question.chord.name}</h2>
           ) : (
-            <h2 className="mt-2 font-display text-2xl leading-snug tracking-tight">{notesPhrase(question.chord)}</h2>
+            <h2 className="mt-3 font-display text-2xl leading-snug tracking-tight">
+              <NoteRow notes={question.chord.notes} />
+            </h2>
           )}
           <p className="mt-2 text-sm text-muted-foreground">
             {build ? "Root, then 3rd, 5th" + (noteCount > 3 ? ", 7th." : ".") : "Root and quality."}
@@ -272,11 +281,14 @@ export function ChordDrill({
                     disabled={solved || locked[i]}
                     onClick={() => setFocused(i)}
                     className={cn(
-                      "flex min-h-16 flex-col items-center justify-center rounded-lg px-1 py-2 shadow-border transition-colors duration-150",
+                      "flex min-h-16 flex-col items-center justify-center rounded-lg px-1 py-2 shadow-border transition-[transform,background-color,color] duration-200",
+                      slot.letter && alterMotion(slot.accidental),
                       mark === "correct" && "bg-success text-success-foreground",
                       mark === "wrong" && "bg-destructive text-destructive-foreground",
-                      mark === null && focused === i && "bg-secondary text-foreground ring-2 ring-ring/40",
-                      mark === null && focused !== i && "bg-secondary/60 text-foreground",
+                      mark === null && focused === i && "ring-2 ring-ring/40",
+                      mark === null && slot.letter && slot.accidental !== 0 && alterFill(slot.accidental),
+                      mark === null && !(slot.letter && slot.accidental) && focused === i && "bg-secondary text-foreground",
+                      mark === null && !(slot.letter && slot.accidental) && focused !== i && "bg-secondary/60 text-foreground",
                     )}
                   >
                     <span className="text-xs opacity-70">{SLOT_LABELS[i]}</span>
@@ -334,7 +346,7 @@ export function ChordDrill({
       <div className="-mx-4 shrink-0 border-t border-border bg-background px-4 pt-3 safe-dock">
         {solved ? (
           <Button size="lg" className="h-12 w-full rounded-lg" onClick={goNext}>
-            {index + 1 >= cards.length ? "See results" : "Next chord"}
+            {place.last ? "See results" : deck ? "Next card" : "Next chord"}
           </Button>
         ) : build ? (
           <Button size="lg" className="h-12 w-full rounded-lg" disabled={!filled} onClick={submitBuild}>

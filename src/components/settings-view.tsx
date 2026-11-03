@@ -16,6 +16,8 @@ export function SettingsView({ onBack }: { onBack: () => void }) {
   const setAutoSeconds = useDrillStore((s) => s.setAutoSeconds);
   const setSoundOn = useDrillStore((s) => s.setSoundOn);
   const setSessionLength = useDrillStore((s) => s.setSessionLength);
+  const nightMode = useDrillStore((s) => s.nightMode);
+  const setNightMode = useDrillStore((s) => s.setNightMode);
 
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-lg flex-col px-4 pt-5 sm:pt-8">
@@ -33,6 +35,32 @@ export function SettingsView({ onBack }: { onBack: () => void }) {
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
             These stick on this phone. Auto-advance only runs after a correct answer.
           </p>
+        </div>
+
+        <div className="flex flex-col gap-3 rounded-2xl bg-card p-4 shadow-border">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-medium">Night mode</p>
+              <p className="mt-1 text-xs text-muted-foreground">Easier on the eyes after dark.</p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={nightMode}
+              onClick={() => setNightMode(!nightMode)}
+              className={cn(
+                "relative h-8 w-14 shrink-0 rounded-full transition-colors duration-150",
+                nightMode ? "bg-primary" : "bg-secondary",
+              )}
+            >
+              <span
+                className={cn(
+                  "absolute top-1 size-6 rounded-full shadow-border transition-transform duration-150",
+                  nightMode ? "translate-x-7 bg-primary-foreground" : "translate-x-1 bg-foreground",
+                )}
+              />
+            </button>
+          </div>
         </div>
 
         <div className="flex flex-col gap-3 rounded-2xl bg-card p-4 shadow-border">
@@ -59,8 +87,8 @@ export function SettingsView({ onBack }: { onBack: () => void }) {
             >
               <span
                 className={cn(
-                  "absolute top-1 size-6 rounded-full bg-background shadow-border transition-transform duration-150",
-                  autoAdvance ? "translate-x-7" : "translate-x-1",
+                  "absolute top-1 size-6 rounded-full shadow-border transition-transform duration-150",
+                  autoAdvance ? "translate-x-7 bg-primary-foreground" : "translate-x-1 bg-foreground",
                 )}
               />
             </button>
@@ -102,7 +130,7 @@ export function SettingsView({ onBack }: { onBack: () => void }) {
               Off
             </Chip>
           </div>
-          <p className="text-xs text-muted-foreground">The scale lesson is silent. This is saved for later.</p>
+          <p className="text-xs text-muted-foreground">Lessons stay silent. This is saved for later.</p>
         </div>
       </section>
     </div>

@@ -8,7 +8,7 @@ import {
 
 export const ROOT_LETTERS: Letter[] = ["A", "B", "C", "D", "E", "F", "G"];
 
-export type ChordFilter = "major" | "minor" | "augmented" | "diminished" | "seventh";
+export type ChordFilter = "major" | "minor" | "augmented" | "diminished" | "dom7" | "maj7" | "min7";
 
 export type ChordQuality = "major" | "minor" | "augmented" | "diminished" | "dom7" | "maj7" | "min7";
 
@@ -17,7 +17,9 @@ export const FILTERS: { id: ChordFilter; label: string }[] = [
   { id: "minor", label: "Minor" },
   { id: "augmented", label: "Augmented" },
   { id: "diminished", label: "Diminished" },
-  { id: "seventh", label: "7th chords" },
+  { id: "dom7", label: "Dominant 7" },
+  { id: "maj7", label: "Major 7" },
+  { id: "min7", label: "Minor 7" },
 ];
 
 export const ALL_FILTERS: ChordFilter[] = FILTERS.map((item) => item.id);
@@ -27,7 +29,9 @@ const FILTER_QUALITIES: Record<ChordFilter, ChordQuality[]> = {
   minor: ["minor"],
   augmented: ["augmented"],
   diminished: ["diminished"],
-  seventh: ["dom7", "maj7", "min7"],
+  dom7: ["dom7"],
+  maj7: ["maj7"],
+  min7: ["min7"],
 };
 
 /** Diatonic steps from the root, then semitone distance. */
@@ -98,21 +102,21 @@ export const QUALITY_META: Record<
     hint: "A diminished chord has a minor 3rd and a diminished 5th.",
   },
   dom7: {
-    filter: "seventh",
+    filter: "dom7",
     label: "7",
     short: "7",
     button: "7",
     hint: "A dominant 7th chord has a major 3rd, a perfect 5th, and a minor 7th.",
   },
   maj7: {
-    filter: "seventh",
+    filter: "maj7",
     label: "maj7",
     short: "maj7",
     button: "maj7",
     hint: "A major 7th chord has a major 3rd, a perfect 5th, and a major 7th.",
   },
   min7: {
-    filter: "seventh",
+    filter: "min7",
     label: "m7",
     short: "m7",
     button: "m7",

@@ -63,7 +63,7 @@ export function ParallelDrill({
         <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">From C major</p>
         <h2 className="mt-1 font-display text-2xl leading-snug tracking-tight">Let’s make C {kind.label}.</h2>
 
-        <div className="mt-4 grid grid-cols-7 gap-1">
+        <div className="mt-4 grid grid-cols-7 gap-1 px-0.5 py-3">
           {DEGREES.map((item) => (
             <NotePill key={item} kind={kind} degree={item} current={degree} />
           ))}
@@ -97,7 +97,9 @@ function NotePill({ kind, degree, current }: { kind: ScaleKind; degree: Degree; 
   return (
     <div
       className={cn(
-        "flex h-14 items-center justify-center rounded-lg text-sm font-medium",
+        "flex h-14 items-center justify-center rounded-lg text-sm font-medium transition-transform duration-200",
+        alteration === -1 && "translate-y-1.5",
+        alteration === 1 && "-translate-y-1.5",
         active && alteration === -1 && "bg-lowered text-lowered-foreground ring-2 ring-foreground",
         active && alteration === 1 && "bg-raised text-raised-foreground ring-2 ring-foreground",
         active && alteration === 0 && "bg-primary text-primary-foreground",

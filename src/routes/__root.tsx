@@ -37,6 +37,12 @@ export const Route = createRootRoute({
         <HeadContent />
       </head>
       <body>
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{var s=JSON.parse(localStorage.getItem('halfstep-v6')||'{}');if(s.nightMode)document.documentElement.classList.add('dark')}catch(e){}",
+          }}
+        />
         <PreviewHostBridge />
         <AuthProvider>
           <Outlet />

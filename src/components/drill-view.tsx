@@ -12,6 +12,7 @@ import {
   stepsPhrase,
 } from "@/lib/intervals/catalog";
 import type { CardResult, Question } from "@/lib/intervals/quiz";
+import { cardPlace, type DeckPlace } from "@/lib/deck";
 import { useDrillStore } from "@/lib/intervals/store";
 import { useAutoAdvance } from "@/lib/use-auto-advance";
 import { cn } from "@/lib/utils";
@@ -38,10 +39,12 @@ const STEP_OPTIONS = Array.from({ length: 13 }, (_, value) => ({ value: String(v
 
 export function DrillView({
   cards,
+  deck,
   onExit,
   onDone,
 }: {
   cards: Question[];
+  deck?: DeckPlace;
   onExit: () => void;
   onDone: (results: CardResult[]) => void;
 }) {
@@ -163,6 +166,7 @@ export function DrillView({
           : degree
             ? (DEGREES.find((item) => item.value === degree)?.label ?? "")
             : "";
+  const place = cardPlace(index, cards.length, deck);
 
   return (
     <div className="mx-auto flex h-dvh w-full max-w-lg flex-col overflow-hidden px-4 pt-4">
@@ -176,14 +180,14 @@ export function DrillView({
 
       <div className="mt-3 flex shrink-0 items-center justify-between text-xs tabular-nums text-muted-foreground">
         <span>
-          {index + 1} / {cards.length}
+          {place.current} / {place.total}
         </span>
         <span>{streak > 0 ? `Streak ${streak}` : " "}</span>
       </div>
       <div className="mt-2 h-1 shrink-0 overflow-hidden rounded-full bg-secondary">
         <div
           className="h-full rounded-full bg-foreground transition-[width] duration-200 ease-out"
-          style={{ width: `${(index / cards.length) * 100}%` }}
+          style={{ width: place.width }}
         />
       </div>
 
@@ -273,7 +277,7 @@ export function DrillView({
       <div className="-mx-4 shrink-0 border-t border-border bg-background px-4 pt-3 safe-dock">
         {solved ? (
           <Button size="lg" className="h-12 w-full rounded-lg" onClick={goNext}>
-            {index + 1 >= cards.length ? "See results" : "Next card"}
+            {place.last ? "See results" : "Next card"}
           </Button>
         ) : (
           <p className="pb-1 text-center text-xs text-muted-foreground">

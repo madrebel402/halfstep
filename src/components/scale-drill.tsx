@@ -1,13 +1,15 @@
 import { useRef, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
+import { NoteRow, alterFill, alterMotion } from "@/components/altered-note";
 import { CorrectBurst } from "@/components/correct-burst";
 import { NoteKeypad } from "@/components/keypad";
 import { Button } from "@/components/ui/button";
 import { accidentalGlyph, type Letter } from "@/lib/intervals/catalog";
+import { cardPlace, type DeckPlace } from "@/lib/deck";
 import { useDrillStore } from "@/lib/intervals/store";
 import { useAutoAdvance } from "@/lib/use-auto-advance";
-import { buttonLabel, notesPhrase, QUALITY_META, qualitiesFor, type ScaleId } from "@/lib/scales/catalog";
+import { buttonLabel, QUALITY_META, qualitiesFor, type ScaleId } from "@/lib/scales/catalog";
 import type { ScaleQuestion, ScaleResult } from "@/lib/scales/quiz";
 import { cn } from "@/lib/utils";
 
@@ -27,15 +29,18 @@ function emptySlots(count: number): Slot[] {
 
 export function ScaleDrill({
   cards,
+  deck,
   onExit,
   onDone,
 }: {
   cards: ScaleQuestion[];
+  deck?: DeckPlace;
   onExit: () => void;
   onDone: (results: ScaleResult[]) => void;
 }) {
   const first = cards[0];
   const [index, setIndex] = useState(0);
+  const place = cardPlace(index, cards.length, deck);
   const [slots, setSlots] = useState<Slot[]>(emptySlots(first?.scale.notes.length ?? 7));
   const [focused, setFocused] = useState(0);
   const [marks, setMarks] = useState<Mark[]>(slots.map(() => null));
@@ -226,14 +231,14 @@ export function ScaleDrill({
 
       <div className="mt-3 flex shrink-0 items-center justify-between text-xs tabular-nums text-muted-foreground">
         <span>
-          {index + 1} / {cards.length}
+          {place.current} / {place.total}
         </span>
         <span>{streak > 0 ? `Streak ${streak}` : " "}</span>
       </div>
       <div className="mt-2 h-1 shrink-0 overflow-hidden rounded-full bg-secondary">
         <div
           className="h-full rounded-full bg-foreground transition-[width] duration-200 ease-out"
-          style={{ width: `${(index / cards.length) * 100}%` }}
+          style={{ width: place.width }}
         />
       </div>
 
@@ -243,7 +248,7 @@ export function ScaleDrill({
             {build ? "Build this scale" : "Name this scale"}
           </p>
           <h2 className="mt-2 font-display text-2xl leading-snug tracking-tight">
-            {build ? question.scale.name : notesPhrase(question.scale)}
+            {build ? question.scale.name : <NoteRow notes={question.scale.notes} />}
           </h2>
           <p className="mt-2 text-sm text-muted-foreground">
             {build ? `Enter all ${noteCount} notes, tonic first.` : "Root, then the type."}
@@ -260,11 +265,14 @@ export function ScaleDrill({
                     disabled={solved || locked[i]}
                     onClick={() => setFocused(i)}
                     className={cn(
-                      "flex min-h-14 flex-col items-center justify-center rounded-lg px-0.5 py-2 shadow-border transition-colors duration-150",
+                      "flex min-h-14 flex-col items-center justify-center rounded-lg px-0.5 py-2 shadow-border transition-[transform,background-color,color] duration-200",
+                      slot.letter && alterMotion(slot.accidental),
                       mark === "correct" && "bg-success text-success-foreground",
                       mark === "wrong" && "bg-destructive text-destructive-foreground",
-                      mark === null && focused === i && "bg-secondary text-foreground ring-2 ring-ring/40",
-                      mark === null && focused !== i && "bg-secondary/60 text-foreground",
+                      mark === null && focused === i && "ring-2 ring-ring/40",
+                      mark === null && slot.letter && slot.accidental !== 0 && alterFill(slot.accidental),
+                      mark === null && !(slot.letter && slot.accidental) && focused === i && "bg-secondary text-foreground",
+                      mark === null && !(slot.letter && slot.accidental) && focused !== i && "bg-secondary/60 text-foreground",
                     )}
                   >
                     <span className="text-xs opacity-70">{i + 1}</span>
@@ -317,7 +325,7 @@ export function ScaleDrill({
       <div className="-mx-4 shrink-0 border-t border-border bg-background px-4 pt-3 safe-dock">
         {solved ? (
           <Button size="lg" className="h-12 w-full rounded-lg" onClick={goNext}>
-            {index + 1 >= cards.length ? "See results" : "Next scale"}
+            {place.last ? "See results" : deck ? "Next card" : "Next scale"}
           </Button>
         ) : build ? (
           <Button size="lg" className="h-12 w-full rounded-lg" disabled={!filled} onClick={submitSlots}>
