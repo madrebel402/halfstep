@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { ChordDrill } from "@/components/chord-drill";
+import { CircleDrill, type CircleResult } from "@/components/circle-drill";
 import { DrillView } from "@/components/drill-view";
 import { KeysDrill } from "@/components/keys-drill";
 import { ParallelDrill } from "@/components/parallel-drill";
 import { ScaleDrill } from "@/components/scale-drill";
+import { SettingsView } from "@/components/settings-view";
 import { StartView } from "@/components/start-view";
 import { SummaryView, type SummaryItem } from "@/components/summary-view";
-import { unlockAudio } from "@/lib/audio";
 import { makeChordSession, type ChordQuestion, type ChordResult } from "@/lib/chords/quiz";
 import type { IntervalId } from "@/lib/intervals/catalog";
 import { noteLabel, stepsPhrase } from "@/lib/intervals/catalog";
@@ -15,12 +16,12 @@ import { makeSession, type CardResult, type Question } from "@/lib/intervals/qui
 import { useDrillStore } from "@/lib/intervals/store";
 import { makeKeySession, type KeyQuestion, type KeyResult } from "@/lib/keys/quiz";
 import { formulaStrip, notesPhrase } from "@/lib/scales/catalog";
-import { makeParallelSession, type ParallelQuestion, type ParallelResult } from "@/lib/scales/parallel";
+import type { ParallelResult } from "@/lib/scales/parallel";
 import { makeScaleSession, type ScaleQuestion, type ScaleResult } from "@/lib/scales/quiz";
 
 export const Route = createFileRoute("/")({ component: Home });
 
-type Screen = "start" | "intervals" | "chords" | "accidentals" | "scales" | "parallel" | "summary";
+type Screen = "start" | "settings" | "intervals" | "chords" | "accidentals" | "scales" | "parallel" | "summary" | "circle";
 
 function Home() {
   const hydrate = useDrillStore((s) => s.hydrate);
@@ -29,9 +30,9 @@ function Home() {
   const [chordCards, setChordCards] = useState<ChordQuestion[]>([]);
   const [keyCards, setKeyCards] = useState<KeyQuestion[]>([]);
   const [scaleCards, setScaleCards] = useState<ScaleQuestion[]>([]);
-  const [parallelCards, setParallelCards] = useState<ParallelQuestion[]>([]);
   const [summary, setSummary] = useState<SummaryItem[]>([]);
   const [focusIds, setFocusIds] = useState<string[] | undefined>();
+  const [circleIds, setCircleIds] = useState<string[] | undefined>();
 
   useEffect(() => {
     hydrate();
@@ -62,12 +63,8 @@ function Home() {
   }
 
   function startScales(ids?: string[]) {
-    const { byId, scaleFilters, scaleMode, parallelStage, sessionLength } = useDrillStore.getState();
+    const { byId, scaleFilters, scaleMode, sessionLength } = useDrillStore.getState();
     if (scaleMode === "shift") {
-      unlockAudio();
-      const length = parallelStage === "ladder" ? 6 : ids?.length ? Math.max(6, ids.length * 2) : sessionLength;
-      setParallelCards(makeParallelSession({ length, stats: byId, stage: parallelStage, onlyIds: ids }));
-      setFocusIds(ids);
       setScreen("parallel");
       return;
     }
@@ -82,7 +79,10 @@ function Home() {
     if (topic === "chords") startChords(ids);
     else if (topic === "accidentals") startKeys(ids);
     else if (topic === "scales") startScales(ids);
-    else startIntervals(ids as IntervalId[] | undefined);
+    else if (topic === "circle") {
+      setCircleIds(ids);
+      setScreen("circle");
+    } else startIntervals(ids as IntervalId[] | undefined);
   }
 
   function finishIntervals(results: CardResult[]) {
@@ -133,6 +133,11 @@ function Home() {
     setScreen("summary");
   }
 
+  function finishCircle(results: CircleResult[]) {
+    setSummary(results);
+    setScreen("summary");
+  }
+
   function finishParallel(results: ParallelResult[]) {
     setSummary(
       results.map((result) => ({
@@ -147,7 +152,8 @@ function Home() {
 
   return (
     <main className="min-h-dvh bg-background text-foreground">
-      {screen === "start" ? <StartView onStart={() => start()} /> : null}
+      {screen === "start" ? <StartView onStart={() => start()} onSettings={() => setScreen("settings")} /> : null}
+      {screen === "settings" ? <SettingsView onBack={() => setScreen("start")} /> : null}
       {screen === "intervals" && intervalCards.length > 0 ? (
         <DrillView cards={intervalCards} onExit={() => setScreen("start")} onDone={finishIntervals} />
       ) : null}
@@ -160,8 +166,9 @@ function Home() {
       {screen === "scales" && scaleCards.length > 0 ? (
         <ScaleDrill cards={scaleCards} onExit={() => setScreen("start")} onDone={finishScales} />
       ) : null}
-      {screen === "parallel" && parallelCards.length > 0 ? (
-        <ParallelDrill cards={parallelCards} onExit={() => setScreen("start")} onDone={finishParallel} />
+      {screen === "parallel" ? <ParallelDrill onExit={() => setScreen("start")} onDone={finishParallel} /> : null}
+      {screen === "circle" ? (
+        <CircleDrill onlyIds={circleIds} onExit={() => setScreen("start")} onDone={finishCircle} />
       ) : null}
       {screen === "summary" ? (
         <SummaryView

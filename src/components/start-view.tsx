@@ -1,4 +1,4 @@
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight, Check, Settings } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
 import { ReferenceDialog } from "@/components/reference-dialog";
 import { Chip, SettingsBar } from "@/components/settings-bar";
@@ -8,10 +8,9 @@ import { ALL_FILTERS, FILTERS } from "@/lib/chords/catalog";
 import { MNEMONIC_SHARPS } from "@/lib/keys/catalog";
 import { useDrillStore } from "@/lib/intervals/store";
 import { ALL_FILTERS as ALL_SCALE_FILTERS, FILTERS as SCALE_FILTERS } from "@/lib/scales/catalog";
-import type { ParallelStage } from "@/lib/scales/parallel";
 import { cn } from "@/lib/utils";
 
-export function StartView({ onStart }: { onStart: () => void }) {
+export function StartView({ onStart, onSettings }: { onStart: () => void; onSettings: () => void }) {
   const topic = useDrillStore((s) => s.topic);
   const direction = useDrillStore((s) => s.direction);
   const range = useDrillStore((s) => s.range);
@@ -23,9 +22,7 @@ export function StartView({ onStart }: { onStart: () => void }) {
   const chordFilters = useDrillStore((s) => s.chordFilters);
   const scaleFilters = useDrillStore((s) => s.scaleFilters);
   const scaleMode = useDrillStore((s) => s.scaleMode);
-  const parallelStage = useDrillStore((s) => s.parallelStage);
   const sessionLength = useDrillStore((s) => s.sessionLength);
-  const soundOn = useDrillStore((s) => s.soundOn);
   const setTopic = useDrillStore((s) => s.setTopic);
   const setDirection = useDrillStore((s) => s.setDirection);
   const setRange = useDrillStore((s) => s.setRange);
@@ -34,9 +31,9 @@ export function StartView({ onStart }: { onStart: () => void }) {
   const toggleScaleFilter = useDrillStore((s) => s.toggleScaleFilter);
   const setAllScaleFilters = useDrillStore((s) => s.setAllScaleFilters);
   const setScaleMode = useDrillStore((s) => s.setScaleMode);
-  const setParallelStage = useDrillStore((s) => s.setParallelStage);
-  const setSessionLength = useDrillStore((s) => s.setSessionLength);
-  const setSoundOn = useDrillStore((s) => s.setSoundOn);
+  const autoAdvance = useDrillStore((s) => s.autoAdvance);
+  const autoSeconds = useDrillStore((s) => s.autoSeconds);
+  const setAutoAdvance = useDrillStore((s) => s.setAutoAdvance);
 
   const accuracy = reviewed === 0 ? "—" : `${Math.round((correct / reviewed) * 100)}%`;
   const allOn = ALL_FILTERS.every((item) => chordFilters.includes(item));
@@ -58,23 +55,33 @@ export function StartView({ onStart }: { onStart: () => void }) {
         : topic === "scales"
           ? scaleMode === "shift"
             ? {
-                title: "Same tonic. New color.",
-                body: "Always start from major. Slide degrees — not letters — to build the parallel scale.",
+                title: "One letter at a time.",
+                body: "Start from C major. The lesson tells you which notes stay, which get flatted, and which get sharped.",
               }
             : {
                 title: "Spell the scale.",
                 body: "Build every note, or read the notes and name the scale. Check the types you want.",
               }
-          : {
-              title: "Learn the space between notes.",
-              body: "A half-step is one piano key to the next, black keys included. Name the interval, or count the steps.",
-            };
+          : topic === "circle"
+            ? {
+                title: "Walk the circle.",
+                body: "C stays on the diagram. Name the next key and how many sharps it has. Then the flats, the other way. Then the relative minor of each key.",
+              }
+            : {
+                title: "Learn the space between notes.",
+                body: "A half-step is one piano key to the next, black keys included. Name the interval, or count the steps.",
+              };
 
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-lg flex-col px-4 pt-5 sm:pt-8">
       <header className="flex items-center justify-between">
         <BrandMark />
-        {topic === "intervals" ? <ReferenceDialog /> : <span className="size-9" />}
+        <div className="flex items-center gap-1">
+          {topic === "intervals" ? <ReferenceDialog /> : null}
+          <Button variant="ghost" size="icon-sm" onClick={onSettings} aria-label="Settings">
+            <Settings />
+          </Button>
+        </div>
       </header>
 
       <section className="stagger-in mt-6 flex flex-col gap-5 pb-4">
@@ -109,17 +116,44 @@ export function StartView({ onStart }: { onStart: () => void }) {
           ))}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Round</span>
-          {([5, 10, 15] as const).map((n) => (
-            <Chip key={n} active={sessionLength === n} onClick={() => setSessionLength(n)}>
-              {String(n)}
-            </Chip>
-          ))}
-          <Chip active={!soundOn} onClick={() => setSoundOn(!soundOn)}>
-            {soundOn ? "Sound on" : "Sound off"}
-          </Chip>
-        </div>
+        <button
+          type="button"
+          onClick={() => setTopic("circle")}
+          className={cn(
+            "flex min-h-16 flex-col items-start justify-center rounded-xl px-4 py-3 text-left shadow-border transition-colors duration-150",
+            topic === "circle" ? "bg-primary text-primary-foreground" : "bg-card hover:bg-secondary",
+          )}
+        >
+          <span className="text-sm font-medium">Circle of fifths</span>
+          <span className={cn("mt-0.5 text-xs", topic === "circle" ? "text-primary-foreground/70" : "text-muted-foreground")}>
+            Fifths, then fourths
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setAutoAdvance(!autoAdvance)}
+          className="flex items-center justify-between gap-3 rounded-xl bg-card px-4 py-3 text-left shadow-border"
+        >
+          <span>
+            <span className="block text-sm font-medium">Auto-advance</span>
+            <span className="mt-0.5 block text-xs text-muted-foreground">
+              {autoAdvance
+                ? autoSeconds === 0
+                  ? "On · skips the correct screen"
+                  : `On · correct screen for ${autoSeconds}s`
+                : "Off · you tap Next"}
+            </span>
+          </span>
+          <span
+            className={cn(
+              "rounded-md px-3 py-1.5 text-sm font-medium",
+              autoAdvance ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground",
+            )}
+          >
+            {autoAdvance ? "On" : "Off"}
+          </span>
+        </button>
 
         {topic === "chords" ? (
           <div className="flex flex-col gap-1">
@@ -144,7 +178,7 @@ export function StartView({ onStart }: { onStart: () => void }) {
           <div className="rounded-2xl bg-card px-5 py-5 shadow-border">
             <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Example · mnemonic</p>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">“{MNEMONIC_SHARPS}”</p>
-            <p className="mt-2 font-display text-lg tracking-tight">Order of sharps</p>
+            <p className="mt-2 font-display text-lg tracking-tight">The order sharps are added</p>
           </div>
         ) : topic === "scales" ? (
           <div className="flex flex-col gap-4">
@@ -155,40 +189,14 @@ export function StartView({ onStart }: { onStart: () => void }) {
                   Spell the notes
                 </Chip>
                 <Chip active={scaleMode === "shift"} onClick={() => setScaleMode("shift")}>
-                  Parallel builder
+                  Lesson
                 </Chip>
               </div>
             </div>
             {scaleMode === "shift" ? (
-              <div className="flex flex-col gap-2">
-                <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Stage</p>
-                <div className="flex flex-wrap gap-2">
-                  {(
-                    [
-                      [1, "Stage 1"],
-                      [2, "Stage 2"],
-                      [3, "Stage 3"],
-                      [4, "Modes"],
-                      ["ladder", "Ladder"],
-                    ] as [ParallelStage, string][]
-                  ).map(([id, label]) => (
-                    <Chip key={String(id)} active={parallelStage === id} onClick={() => setParallelStage(id)}>
-                      {label}
-                    </Chip>
-                  ))}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {parallelStage === 1
-                    ? "One change: Mixolydian ♭7, Lydian ♯4."
-                    : parallelStage === 2
-                      ? "Adds Dorian and natural minor."
-                      : parallelStage === 3
-                        ? "Adds harmonic and melodic minor."
-                        : parallelStage === "ladder"
-                          ? "Same tonic, Lydian down to Locrian — hear it darken."
-                          : "Unlocks Phrygian ♭2 and Locrian ♭5."}
-                </p>
-              </div>
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                Eight scales, always from C major. Mixolydian first, then the minor scales, then Phrygian and Locrian.
+              </p>
             ) : (
               <div className="flex flex-col gap-1">
                 <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Scale types</p>
@@ -211,6 +219,14 @@ export function StartView({ onStart }: { onStart: () => void }) {
                 </p>
               </div>
             )}
+          </div>
+        ) : topic === "circle" ? (
+          <div className="rounded-2xl bg-card px-5 py-5 shadow-border">
+            <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">First step</p>
+            <p className="mt-3 font-display text-2xl tracking-tight">G · 1♯</p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              One key sharper than C. The diagram keeps every key you fill in.
+            </p>
           </div>
         ) : (
           <div className="rounded-2xl bg-card px-5 py-5 shadow-border">
@@ -243,7 +259,7 @@ export function StartView({ onStart }: { onStart: () => void }) {
             onStart();
           }}
         >
-          Start {sessionLength} cards
+          {topic === "circle" ? "Start the circle" : `Start ${sessionLength} cards`}
           <ArrowRight />
         </Button>
         {topic === "chords" && !canStart ? (

@@ -8,6 +8,7 @@ import { accidentalGlyph, type Letter } from "@/lib/intervals/catalog";
 import { SCALE_LETTERS } from "@/lib/keys/catalog";
 import type { KeyBonus, KeyQuestion, KeyResult } from "@/lib/keys/quiz";
 import { useDrillStore } from "@/lib/intervals/store";
+import { useAutoAdvance } from "@/lib/use-auto-advance";
 import { cn } from "@/lib/utils";
 
 type Phase = "ask" | "solved" | "bonus" | "bonus-solved";
@@ -38,6 +39,7 @@ export function KeysDrill({
   const resultsRef = useRef<KeyResult[]>([]);
   const recordAnswer = useDrillStore((s) => s.recordAnswer);
   const streak = useDrillStore((s) => s.streak);
+  const skipCorrect = useAutoAdvance(phase === "solved" || phase === "bonus-solved", goNext);
 
   const question = cards[index];
   const bonus = question.bonus;
@@ -211,8 +213,10 @@ export function KeysDrill({
           ) : null}
         </div>
 
-        {phase === "solved" ? <CorrectBurst detail={question.reveal} streak={streak} compact /> : null}
-        {phase === "bonus-solved" && bonus ? <CorrectBurst detail={bonus.reveal} streak={streak} compact /> : null}
+        {phase === "solved" && !skipCorrect ? <CorrectBurst detail={question.reveal} streak={streak} compact /> : null}
+        {phase === "bonus-solved" && bonus && !skipCorrect ? (
+          <CorrectBurst detail={bonus.reveal} streak={streak} compact />
+        ) : null}
 
         {asking && question.input === "choices" ? (
           <ChoicePad options={question.choices} wrong={wrongPicks} solved={false} onPick={choose} columns={2} />

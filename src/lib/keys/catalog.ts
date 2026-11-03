@@ -85,13 +85,13 @@ export function notesPhrase(key: KeySig): string {
 export const MNEMONIC_SHARP_KEYS = "God Does An Excellent Back Flip Carefully";
 export const MNEMONIC_SHARPS = "Father Charles Goes Down And Ends Battle";
 export const MNEMONIC_FLATS = "Battle Ends And Down Goes Charles Father";
-export const MNEMONIC_FLAT_KEYS = "Fat Boys Eat All Day Getting Candy";
+export const MNEMONIC_FLAT_KEYS = "Four Bears Eat Apples During Grocery Checkout";
 
 export const MNEMONIC_USES = [
-  { id: "order-sharps", label: "Order of sharps" },
-  { id: "order-flats", label: "Order of flats" },
-  { id: "sharp-keys", label: "Order of keys by # of sharps" },
-  { id: "flat-keys", label: "Order of keys by # of flats" },
+  { id: "order-sharps", label: "The order sharps are added" },
+  { id: "order-flats", label: "The order flats are added" },
+  { id: "sharp-keys", label: "The order of the sharp keys" },
+  { id: "flat-keys", label: "The order of the flat keys" },
 ] as const;
 
 export type MnemonicUseId = (typeof MNEMONIC_USES)[number]["id"];
@@ -110,32 +110,32 @@ export const MEMORY: MemoryDef[] = [
     id: "mem-father-charles",
     phrase: MNEMONIC_SHARPS,
     useId: "order-sharps",
-    useLabel: "Order of sharps",
-    reveal: "Father Charles Goes Down And Ends Battle is the order sharps are added: F C G D A E B.",
+    useLabel: "The order sharps are added",
+    reveal: "Father Charles Goes Down And Ends Battle names the sharps in the order they are added: F, C, G, D, A, E, B.",
     bonusKind: "select-sharps",
   },
   {
     id: "mem-battle-ends",
     phrase: MNEMONIC_FLATS,
     useId: "order-flats",
-    useLabel: "Order of flats",
-    reveal: "Battle Ends And Down Goes Charles Father is the order flats are added: B E A D G C F.",
+    useLabel: "The order flats are added",
+    reveal: "Battle Ends And Down Goes Charles Father names the flats in the order they are added: B, E, A, D, G, C, F.",
     bonusKind: "select-flats",
   },
   {
     id: "mem-god-does",
     phrase: MNEMONIC_SHARP_KEYS,
     useId: "sharp-keys",
-    useLabel: "Order of keys by # of sharps",
-    reveal: "God Does An Excellent Back Flip Carefully is the sharp keys from 1 to 7: G D A E B F♯ C♯.",
+    useLabel: "The order of the sharp keys",
+    reveal: "God Does An Excellent Back Flip Carefully is the order of the sharp keys, from one sharp to seven: G, D, A, E, B, F♯, C♯.",
     bonusKind: "key-name-sharps",
   },
   {
     id: "mem-fat-boys",
     phrase: MNEMONIC_FLAT_KEYS,
     useId: "flat-keys",
-    useLabel: "Order of keys by # of flats",
-    reveal: "Fat Boys Eat All Day Getting Candy is the flat keys from 1 to 7: F B♭ E♭ A♭ D♭ G♭ C♭.",
+    useLabel: "The order of the flat keys",
+    reveal: "Four Bears Eat Apples During Grocery Checkout is the order of the flat keys, from one flat to seven: F, B♭, E♭, A♭, D♭, G♭, C♭.",
     bonusKind: "key-name-flats",
   },
 ];

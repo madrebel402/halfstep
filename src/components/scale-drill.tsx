@@ -6,6 +6,7 @@ import { NoteKeypad } from "@/components/keypad";
 import { Button } from "@/components/ui/button";
 import { accidentalGlyph, type Letter } from "@/lib/intervals/catalog";
 import { useDrillStore } from "@/lib/intervals/store";
+import { useAutoAdvance } from "@/lib/use-auto-advance";
 import { buttonLabel, notesPhrase, QUALITY_META, qualitiesFor, type ScaleId } from "@/lib/scales/catalog";
 import type { ScaleQuestion, ScaleResult } from "@/lib/scales/quiz";
 import { cn } from "@/lib/utils";
@@ -46,6 +47,7 @@ export function ScaleDrill({
   const resultsRef = useRef<ScaleResult[]>([]);
   const recordAnswer = useDrillStore((s) => s.recordAnswer);
   const streak = useDrillStore((s) => s.streak);
+  const skipCorrect = useAutoAdvance(solved, goNext);
   const filters = useDrillStore((s) => s.scaleFilters);
   const qualityButtons = qualitiesFor(filters.length ? filters : ["major", "minor"]);
 
@@ -277,7 +279,7 @@ export function ScaleDrill({
             </p>
           )}
 
-          {solved ? (
+          {solved && !skipCorrect ? (
             <div className="mt-4">
               <CorrectBurst detail={question.scale.hint} streak={streak} compact />
             </div>

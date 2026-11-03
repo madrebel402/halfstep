@@ -8,11 +8,44 @@ import {
   SCALE_KINDS,
   shapeInstruction,
   TONICS,
+  ZERO_ALTS,
   type AlterMap,
   type ScaleId,
   type ScaleKind,
   type Tonic,
 } from "./catalog";
+
+export const LESSON_ORDER: ScaleId[] = [
+  "mixolydian",
+  "lydian",
+  "melodic-minor",
+  "dorian",
+  "harmonic-minor",
+  "natural-minor",
+  "phrygian",
+  "locrian",
+];
+
+export const LESSON_TONIC: Tonic = TONICS[0];
+
+export function lessonScales(): ScaleKind[] {
+  return LESSON_ORDER.map((id) => KIND_BY_ID[id]);
+}
+
+export function lessonResults(): ParallelResult[] {
+  return lessonScales().map((kind) => ({
+    correct: true,
+    question: {
+      id: kind.id,
+      prompt: "name",
+      tonic: LESSON_TONIC,
+      target: kind,
+      requiredAlterations: kind.alterations,
+      instruction: `Let's make C ${kind.label}.`,
+      startAlterations: ZERO_ALTS,
+    },
+  }));
+}
 
 export type ParallelPrompt = "name" | "shape" | "function" | "ladder";
 export type ParallelStage = 1 | 2 | 3 | 4 | "ladder";

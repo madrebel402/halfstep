@@ -8,7 +8,7 @@ import { setMuted } from "@/lib/audio";
 
 const STORAGE_KEY = "halfstep-v6";
 
-export type Topic = "intervals" | "chords" | "accidentals" | "scales";
+export type Topic = "intervals" | "chords" | "accidentals" | "scales" | "circle";
 
 export interface DrillSettings {
   direction: Direction;
@@ -20,6 +20,8 @@ export interface DrillSettings {
   parallelStage: ParallelStage;
   sessionLength: 5 | 10 | 15;
   soundOn: boolean;
+  autoAdvance: boolean;
+  autoSeconds: number;
 }
 
 export interface DrillStats {
@@ -44,6 +46,8 @@ interface DrillState extends DrillSettings, DrillStats {
   setParallelStage: (stage: ParallelStage) => void;
   setSessionLength: (length: 5 | 10 | 15) => void;
   setSoundOn: (on: boolean) => void;
+  setAutoAdvance: (on: boolean) => void;
+  setAutoSeconds: (seconds: number) => void;
   recordAnswer: (id: string, correct: boolean) => void;
 }
 
@@ -57,6 +61,8 @@ const defaults: DrillSettings & DrillStats = {
   parallelStage: 2,
   sessionLength: 10,
   soundOn: true,
+  autoAdvance: true,
+  autoSeconds: 2,
   reviewed: 0,
   correct: 0,
   streak: 0,
@@ -76,6 +82,8 @@ function persist(state: DrillState) {
     parallelStage: state.parallelStage,
     sessionLength: state.sessionLength,
     soundOn: state.soundOn,
+    autoAdvance: state.autoAdvance,
+    autoSeconds: state.autoSeconds,
     reviewed: state.reviewed,
     correct: state.correct,
     streak: state.streak,
@@ -83,6 +91,12 @@ function persist(state: DrillState) {
     byId: state.byId,
   };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+}
+
+function clampSeconds(value: unknown): number {
+  const n = typeof value === "number" ? value : 2;
+  if (n < 0 || n > 5 || !Number.isInteger(n)) return 2;
+  return n;
 }
 
 function parseStage(value: unknown): ParallelStage {
@@ -112,7 +126,13 @@ export const useDrillStore = create<DrillState>((set, get) => ({
         const scaleFilters = parsed.scaleFilters?.length
           ? parsed.scaleFilters.filter((item): item is ScaleFilter => ALL_SCALE_FILTERS.includes(item))
           : defaults.scaleFilters;
-        const topic = parsed.topic === "chords" || parsed.topic === "accidentals" || parsed.topic === "scales" ? parsed.topic : "intervals";
+        const topic =
+          parsed.topic === "chords" ||
+          parsed.topic === "accidentals" ||
+          parsed.topic === "scales" ||
+          parsed.topic === "circle"
+            ? parsed.topic
+            : "intervals";
         const soundOn = parsed.soundOn !== false;
         setMuted(!soundOn);
         set({
@@ -125,6 +145,8 @@ export const useDrillStore = create<DrillState>((set, get) => ({
           parallelStage: parseStage(parsed.parallelStage),
           sessionLength: parsed.sessionLength === 5 || parsed.sessionLength === 15 ? parsed.sessionLength : 10,
           soundOn,
+          autoAdvance: parsed.autoAdvance !== false,
+          autoSeconds: clampSeconds(parsed.autoSeconds),
           reviewed: parsed.reviewed ?? 0,
           correct: parsed.correct ?? 0,
           streak: parsed.streak ?? 0,
@@ -186,6 +208,14 @@ export const useDrillStore = create<DrillState>((set, get) => ({
   setSoundOn: (soundOn) => {
     setMuted(!soundOn);
     set({ soundOn });
+    persist(get());
+  },
+  setAutoAdvance: (autoAdvance) => {
+    set({ autoAdvance });
+    persist(get());
+  },
+  setAutoSeconds: (seconds) => {
+    set({ autoSeconds: clampSeconds(seconds) });
     persist(get());
   },
   recordAnswer: (id, correct) => {

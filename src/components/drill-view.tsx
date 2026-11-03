@@ -13,6 +13,7 @@ import {
 } from "@/lib/intervals/catalog";
 import type { CardResult, Question } from "@/lib/intervals/quiz";
 import { useDrillStore } from "@/lib/intervals/store";
+import { useAutoAdvance } from "@/lib/use-auto-advance";
 import { cn } from "@/lib/utils";
 
 const QUALITIES: { value: IntervalQuality; label: string }[] = [
@@ -54,6 +55,7 @@ export function DrillView({
   const resultsRef = useRef<CardResult[]>([]);
   const recordAnswer = useDrillStore((s) => s.recordAnswer);
   const streak = useDrillStore((s) => s.streak);
+  const skipCorrect = useAutoAdvance(solved, goNext);
 
   const question = cards[index];
 
@@ -198,7 +200,7 @@ export function DrillView({
           ) : null}
         </div>
 
-        {solved ? <CorrectBurst detail={detail} streak={streak} compact /> : null}
+        {solved && !skipCorrect ? <CorrectBurst detail={detail} streak={streak} compact /> : null}
 
         {question.kind === "name-to-steps" ? (
           <ChoicePad
@@ -210,53 +212,59 @@ export function DrillView({
             onPick={chooseSteps}
           />
         ) : (
-          <div className="flex flex-col gap-2">
-            <div className="grid grid-cols-4 gap-1.5">
-              {QUALITIES.map((item) => (
-                <button
-                  key={item.value}
-                  type="button"
-                  disabled={solved}
-                  onClick={() => pickQuality(item.value)}
-                  className={cn(
-                    "flex h-11 items-center justify-center rounded-md px-1 text-sm font-medium shadow-border transition-colors duration-150 active:not-disabled:scale-[0.96]",
-                    solved && question.interval.quality === item.value
-                      ? "bg-success text-success-foreground"
-                      : quality === item.value
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-card hover:bg-secondary",
-                  )}
-                >
-                  {item.label}
-                </button>
-              ))}
+          <div className="flex flex-col gap-3">
+            <div className="rounded-xl bg-highlight/15 p-2">
+              <p className="px-1 pb-1.5 text-xs font-medium tracking-wide text-highlight uppercase">Quality</p>
+              <div className="grid grid-cols-4 gap-1.5">
+                {QUALITIES.map((item) => (
+                  <button
+                    key={item.value}
+                    type="button"
+                    disabled={solved}
+                    onClick={() => pickQuality(item.value)}
+                    className={cn(
+                      "flex h-11 items-center justify-center rounded-md px-1 text-sm font-medium transition-colors duration-150 active:not-disabled:scale-[0.96]",
+                      solved && question.interval.quality === item.value
+                        ? "bg-success text-success-foreground"
+                        : quality === item.value
+                          ? "bg-highlight text-highlight-foreground ring-2 ring-foreground"
+                          : "bg-highlight text-highlight-foreground/80",
+                    )}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
             </div>
-            <div className="grid grid-cols-4 gap-1.5">
-              {DEGREES.map((item) => (
-                <button
-                  key={item.value}
-                  type="button"
-                  disabled={solved || quality === "tritone"}
-                  onClick={() => pickDegree(item.value)}
-                  className={cn(
-                    "flex h-11 items-center justify-center rounded-md text-sm font-medium shadow-border transition-colors duration-150 active:not-disabled:scale-[0.96]",
-                    solved && question.interval.degree === item.value
-                      ? "bg-success text-success-foreground"
-                      : degree === item.value
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-card hover:bg-secondary",
-                  )}
-                >
-                  {item.label}
-                </button>
-              ))}
+            <div className="rounded-xl bg-card p-2 shadow-border">
+              <p className="px-1 pb-1.5 text-xs font-medium tracking-wide text-muted-foreground uppercase">Quantity</p>
+              <div className="grid grid-cols-4 gap-1.5">
+                {DEGREES.map((item) => (
+                  <button
+                    key={item.value}
+                    type="button"
+                    disabled={solved || quality === "tritone"}
+                    onClick={() => pickDegree(item.value)}
+                    className={cn(
+                      "flex h-11 items-center justify-center rounded-md text-sm font-medium shadow-border transition-colors duration-150 active:not-disabled:scale-[0.96] disabled:opacity-40",
+                      solved && question.interval.degree === item.value
+                        ? "bg-success text-success-foreground"
+                        : degree === item.value
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-secondary text-foreground",
+                    )}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
             </div>
             {invalid ? (
               <p className="text-center text-xs text-muted-foreground">That pair isn’t an interval name. Try again.</p>
             ) : missedFirst && !solved ? (
-              <p className="text-center text-xs text-muted-foreground">Not that one. Pick the quality and the number.</p>
+              <p className="text-center text-xs text-muted-foreground">Not that one. Pick a quality and a quantity.</p>
             ) : (
-              <p className="text-center text-xs text-muted-foreground">Quality, then the number.</p>
+              <p className="text-center text-xs text-muted-foreground">Pick one quality and one quantity.</p>
             )}
           </div>
         )}

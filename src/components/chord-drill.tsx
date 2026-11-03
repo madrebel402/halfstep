@@ -15,6 +15,7 @@ import {
 import type { ChordQuestion, ChordResult } from "@/lib/chords/quiz";
 import { accidentalGlyph, type Letter } from "@/lib/intervals/catalog";
 import { useDrillStore } from "@/lib/intervals/store";
+import { useAutoAdvance } from "@/lib/use-auto-advance";
 import { cn } from "@/lib/utils";
 
 type Slot = { letter: Letter | null; accidental: number };
@@ -52,6 +53,7 @@ export function ChordDrill({
   const resultsRef = useRef<ChordResult[]>([]);
   const recordAnswer = useDrillStore((s) => s.recordAnswer);
   const streak = useDrillStore((s) => s.streak);
+  const skipCorrect = useAutoAdvance(solved, goNext);
   const filters = useDrillStore((s) => s.chordFilters);
   const qualityButtons = qualitiesFor(filters.length ? filters : ["major", "minor"]);
 
@@ -289,7 +291,7 @@ export function ChordDrill({
             </p>
           )}
 
-          {solved ? (
+          {solved && !skipCorrect ? (
             <div className="mt-4">
               <CorrectBurst detail={question.chord.hint} streak={streak} compact />
             </div>
