@@ -7,6 +7,7 @@ import { unlockAudio } from "@/lib/audio";
 import { ALL_FILTERS, FILTERS } from "@/lib/chords/catalog";
 import { useDrillStore, type Activity } from "@/lib/intervals/store";
 import { ALL_FILTERS as ALL_SCALE_FILTERS, FILTERS as SCALE_FILTERS } from "@/lib/scales/catalog";
+import { QualityText } from "@/components/quality-text";
 import { cn } from "@/lib/utils";
 
 const FLASH_CARDS = [
@@ -19,9 +20,10 @@ const FLASH_CARDS = [
 
 const PAGES: { id: Activity; label: string; hint: string }[] = [
   { id: "flash", label: "Flashcards", hint: "Intervals, chords, keys, scales, inversions" },
-  { id: "circle", label: "Circle", hint: "Fifths, fourths, then relative minors" },
+  { id: "circle", label: "Circle", hint: "Fifths, fourths, then the relative minor" },
   { id: "scale-lesson", label: "Scale lesson", hint: "Build each scale from C major" },
   { id: "chord-lesson", label: "Chord lesson", hint: "Count the intervals from the root" },
+  { id: "notes", label: "Notes", hint: "One idea at a time, from the theory notes" },
 ];
 
 export function StartView({
@@ -90,10 +92,12 @@ export function StartView({
                   unlockAudio();
                   onOpen?.(page.id);
                 }}
-                className="flex min-h-16 flex-col items-start justify-center rounded-xl bg-card px-4 py-3 text-left shadow-border"
+                className="flex min-h-[4.5rem] flex-col items-start justify-center rounded-xl bg-card px-4 py-3 text-left shadow-border"
               >
-                <span className="text-sm font-medium">{page.label}</span>
-                <span className="mt-0.5 text-xs text-muted-foreground">{page.hint}</span>
+                <span className="text-lg font-medium">{page.label}</span>
+                <span className="mt-0.5 text-sm text-muted-foreground">
+                  <QualityText text={page.hint} />
+                </span>
               </button>
             ))}
           </div>
@@ -148,12 +152,12 @@ export function StartView({
                   type="button"
                   onClick={() => toggleFlashTopic(id)}
                   className={cn(
-                    "flex min-h-16 flex-col items-start justify-center rounded-xl px-4 py-3 text-left shadow-border transition-colors duration-150",
+                    "flex min-h-[4.5rem] flex-col items-start justify-center rounded-xl px-4 py-3 text-left shadow-border transition-colors duration-150",
                     on ? "bg-primary text-primary-foreground" : "bg-card hover:bg-secondary",
                   )}
                 >
-                  <span className="text-sm font-medium">{label}</span>
-                  <span className={cn("mt-0.5 text-xs", on ? "text-primary-foreground/70" : "text-muted-foreground")}>{hint}</span>
+                  <span className="text-lg font-medium">{label}</span>
+                  <span className={cn("mt-0.5 text-sm", on ? "text-primary-foreground/70" : "text-muted-foreground")}>{hint}</span>
                 </button>
               );
             })}
@@ -169,7 +173,7 @@ export function StartView({
             <div className="grid grid-cols-2 gap-1">
               {FILTERS.map((item) => (
                 <CheckRow key={item.id} checked={chordFilters.includes(item.id)} onClick={() => toggleChordFilter(item.id)}>
-                  {item.label}
+                  <QualityText text={item.label} />
                 </CheckRow>
               ))}
             </div>
@@ -189,7 +193,7 @@ export function StartView({
                   checked={scaleFilters.includes(item.id)}
                   onClick={() => toggleScaleFilter(item.id)}
                 >
-                  {item.label}
+                  <QualityText text={item.label} />
                 </CheckRow>
               ))}
             </div>
@@ -236,14 +240,14 @@ function CheckRow({
 }: {
   checked: boolean;
   onClick: () => void;
-  children: string;
+  children: React.ReactNode;
   strong?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="flex h-11 items-center gap-3 rounded-md px-2 text-left transition-colors duration-150 hover:bg-secondary"
+      className="flex h-12 items-center gap-3 rounded-md px-2 text-left transition-colors duration-150 hover:bg-secondary"
     >
       <span
         className={cn(
@@ -253,7 +257,7 @@ function CheckRow({
       >
         {checked ? <Check className="size-3.5" strokeWidth={3} /> : null}
       </span>
-      <span className={cn("text-sm", strong ? "font-medium" : "font-normal")}>{children}</span>
+      <span className={cn("text-base", strong ? "font-medium" : "font-normal")}>{children}</span>
     </button>
   );
 }

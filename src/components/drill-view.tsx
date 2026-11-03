@@ -15,6 +15,7 @@ import type { CardResult, Question } from "@/lib/intervals/quiz";
 import { cardPlace, type DeckPlace } from "@/lib/deck";
 import { useDrillStore } from "@/lib/intervals/store";
 import { useAutoAdvance } from "@/lib/use-auto-advance";
+import { QualityText } from "@/components/quality-text";
 import { cn } from "@/lib/utils";
 
 const QUALITIES: { value: IntervalQuality; label: string }[] = [
@@ -196,11 +197,15 @@ export function DrillView({
           <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">{kindLabel}</p>
           <h2 className="mt-2 font-display text-xl leading-snug tracking-tight text-balance sm:text-2xl">
             {question.promptLead ? `${question.promptLead} ` : null}
-            <em className="not-italic text-highlight">{question.promptEmphasis}</em>
+            <em className="not-italic text-highlight">
+              <QualityText text={question.promptEmphasis} />
+            </em>
             {question.promptTail.startsWith("?") ? question.promptTail : ` ${question.promptTail}`}
           </h2>
           {question.kind === "steps-to-name" && builtLabel ? (
-            <p className={cn("mt-3 font-display text-lg capitalize", invalid && "text-destructive")}>{builtLabel}</p>
+            <p className={cn("mt-3 font-display text-2xl", invalid && "text-destructive")}>
+              <QualityText text={builtLabel} />
+            </p>
           ) : null}
         </div>
 
@@ -227,15 +232,19 @@ export function DrillView({
                     disabled={solved}
                     onClick={() => pickQuality(item.value)}
                     className={cn(
-                      "flex h-11 items-center justify-center rounded-md px-1 text-sm font-medium transition-colors duration-150 active:not-disabled:scale-[0.96]",
+                      "flex h-12 items-center justify-center rounded-md px-1 text-base font-semibold leading-none transition-colors duration-150 active:not-disabled:scale-[0.96]",
                       solved && question.interval.quality === item.value
                         ? "bg-success text-success-foreground"
                         : quality === item.value
-                          ? "bg-highlight text-highlight-foreground ring-2 ring-foreground"
-                          : "bg-highlight text-highlight-foreground/80",
+                          ? "bg-highlight ring-2 ring-foreground"
+                          : "bg-highlight",
                     )}
                   >
-                    {item.label}
+                    {solved && question.interval.quality === item.value ? (
+                      item.label
+                    ) : (
+                      <QualityText text={item.label} tone="slate" />
+                    )}
                   </button>
                 ))}
               </div>
@@ -250,7 +259,7 @@ export function DrillView({
                     disabled={solved || quality === "tritone"}
                     onClick={() => pickDegree(item.value)}
                     className={cn(
-                      "flex h-11 items-center justify-center rounded-md text-sm font-medium shadow-border transition-colors duration-150 active:not-disabled:scale-[0.96] disabled:opacity-40",
+                      "flex h-12 items-center justify-center rounded-md text-base font-semibold shadow-border transition-colors duration-150 active:not-disabled:scale-[0.96] disabled:opacity-40",
                       solved && question.interval.degree === item.value
                         ? "bg-success text-success-foreground"
                         : degree === item.value

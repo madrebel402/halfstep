@@ -4,6 +4,7 @@ import { BrandMark } from "@/components/brand-mark";
 import { Button } from "@/components/ui/button";
 import type { ChordFilter } from "@/lib/chords/catalog";
 import { accidentalGlyph } from "@/lib/intervals/catalog";
+import { QualityText } from "@/components/quality-text";
 import { cn } from "@/lib/utils";
 
 type Tone = { letter: string; accidental: number };
@@ -334,8 +335,12 @@ function TypePicker({ onPick }: { onPick: (id: ChordFilter) => void }) {
             onClick={() => onPick(lesson.id)}
             className="flex min-h-16 flex-col items-start justify-center rounded-xl bg-card px-4 py-3 text-left shadow-border"
           >
-            <span className="text-sm font-medium">{lesson.name}</span>
-            <span className="mt-0.5 text-xs text-muted-foreground">{lesson.formula}</span>
+            <span className="text-lg font-medium">
+              <QualityText text={lesson.name} />
+            </span>
+            <span className="mt-0.5 text-sm text-muted-foreground">
+              <QualityText text={lesson.formula} />
+            </span>
           </button>
         ))}
       </div>
@@ -348,19 +353,33 @@ function LessonPage({ lesson, onPractice }: { lesson: Lesson; onPractice: () => 
     <>
       <div className="mt-4 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto pb-4">
         <div>
-          <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">{lesson.name}</p>
-          <h2 className="mt-1 font-display text-2xl tracking-tight">{lesson.title}</h2>
-          <p className="mt-3 font-display text-xl leading-snug tracking-tight">{lesson.formula}</p>
-          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{lesson.intro}</p>
+          <p className="text-sm font-medium tracking-wide text-muted-foreground">
+            <QualityText text={lesson.name} />
+          </p>
+          <h2 className="mt-1 font-display text-2xl tracking-tight">
+            <QualityText text={lesson.title} />
+          </h2>
+          <p className="mt-3 font-display text-2xl leading-snug tracking-tight">
+            <QualityText text={lesson.formula} />
+          </p>
+          <p className="mt-2 text-base leading-relaxed text-muted-foreground">
+            <QualityText text={lesson.intro} />
+          </p>
         </div>
         {lesson.beats.map((beat) => (
           <section key={beat.name} className="rounded-2xl bg-card px-4 py-4 shadow-border">
-            <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">{beat.name}</p>
-            <h3 className="mt-2 font-display text-xl tracking-tight">Count up {beat.steps} half-steps.</h3>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{beat.detail}</p>
+            <p className="text-sm font-medium tracking-wide text-muted-foreground">
+              <QualityText text={beat.name} />
+            </p>
+            <h3 className="mt-2 font-display text-2xl tracking-tight">Count up {beat.steps} half-steps.</h3>
+            <p className="mt-2 text-base leading-relaxed text-muted-foreground">
+              <QualityText text={beat.detail} />
+            </p>
             <p className="mt-4 text-xs font-medium tracking-wide text-muted-foreground uppercase">Example · from C</p>
             <HalfStepPath notes={path(beat.steps, beat.goal)} goal={beat.name} />
-            <p className="mt-1 text-sm leading-relaxed">{beat.result}</p>
+            <p className="mt-1 text-base leading-relaxed">
+              <QualityText text={beat.result} />
+            </p>
           </section>
         ))}
         <section className="rounded-2xl bg-card px-4 py-4 shadow-border">
@@ -370,12 +389,14 @@ function LessonPage({ lesson, onPractice }: { lesson: Lesson; onPractice: () => 
               <ChordTone key={tone.label} letter={tone.letter} accidental={tone.accidental} label={tone.label} />
             ))}
           </div>
-          <p className="mt-3 text-sm leading-relaxed">{lesson.closing}</p>
+          <p className="mt-3 text-base leading-relaxed">
+            <QualityText text={lesson.closing} />
+          </p>
         </section>
       </div>
       <div className="-mx-4 shrink-0 border-t border-border bg-background px-4 pt-3 safe-dock">
         <Button size="lg" className="h-12 w-full rounded-lg" onClick={onPractice}>
-          {lesson.practice}
+          <QualityText text={lesson.practice} tone="primary" />
         </Button>
       </div>
     </>
@@ -392,14 +413,10 @@ function HalfStepPath({ notes, goal }: { notes: Tone[]; goal: string }) {
           <div key={`${note.letter}${note.accidental}-${index}`} className="flex items-center">
             <span
               className={cn(
-                "flex h-10 min-w-9 items-center justify-center rounded-md px-1.5 text-sm font-medium transition-transform duration-200",
-                note.accidental > 0 && "-translate-y-1.5",
-                note.accidental < 0 && "translate-y-1.5",
+                "flex h-11 min-w-10 items-center justify-center rounded-md px-1.5 text-base font-medium",
                 role === "goal" && "bg-primary text-primary-foreground",
                 role === "root" && "bg-highlight text-highlight-foreground",
-                role === "step" && note.accidental > 0 && "bg-raised text-raised-foreground",
-                role === "step" && note.accidental < 0 && "bg-lowered text-lowered-foreground",
-                role === "step" && note.accidental === 0 && "bg-secondary text-foreground",
+                role === "step" && "bg-secondary text-foreground",
               )}
               aria-label={role === "root" ? `${note.letter} root` : role === "goal" ? `${note.letter} ${goal}` : undefined}
             >
@@ -420,18 +437,15 @@ function ChordTone({ letter, accidental, label }: { letter: string; accidental: 
   return (
     <div
       className={cn(
-        "flex flex-col items-center rounded-lg px-1 py-2 transition-transform",
-        accidental < 0 && "translate-y-1.5 bg-lowered text-lowered-foreground",
-        accidental > 0 && "-translate-y-1.5 bg-raised text-raised-foreground",
-        accidental === 0 && "bg-secondary text-foreground",
+        "flex flex-col items-center rounded-lg bg-secondary px-1 py-2 text-foreground",
       )}
     >
-      <span className="font-display text-xl">
+      <span className="font-display text-2xl">
         {letter}
         {accidentalGlyph(accidental)}
       </span>
-      <span className={cn("mt-1 text-center text-[10px] leading-tight", accidental === 0 && "text-muted-foreground")}>
-        {label}
+      <span className="mt-1 text-center text-xs leading-tight text-muted-foreground">
+        <QualityText text={label} />
       </span>
     </div>
   );

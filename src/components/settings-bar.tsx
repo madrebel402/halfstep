@@ -16,7 +16,7 @@ export function Chip({
       type="button"
       onClick={onClick}
       className={cn(
-        "h-10 rounded-md px-3 text-sm font-medium transition-colors duration-150",
+        "h-12 rounded-md px-3 text-base font-semibold transition-colors duration-150",
         active ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-accent",
       )}
     >

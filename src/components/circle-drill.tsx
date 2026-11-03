@@ -12,6 +12,7 @@ import {
 import { accidentalGlyph, type Letter } from "@/lib/intervals/catalog";
 import { useDrillStore } from "@/lib/intervals/store";
 import { useAutoAdvance } from "@/lib/use-auto-advance";
+import { Major, Minor } from "@/components/quality-text";
 import { cn } from "@/lib/utils";
 
 const LETTERS: Letter[] = ["A", "B", "C", "D", "E", "F", "G"];
@@ -129,14 +130,27 @@ export function CircleDrill({
 
       <div className="mt-2 flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pb-2">
         <div>
-          <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            {step.role === "minor" ? "Relative minor" : step.kind === "sharp" ? "Circle of fifths" : "Circle of fourths"}
-            {streak > 0 ? ` · Streak ${streak}` : ""}
-          </p>
-          <h2 className="mt-1 font-display text-xl leading-snug tracking-tight">
+          <p
+            className={cn(
+              "text-sm font-medium tracking-wide text-muted-foreground",
+              step.role !== "minor" && "uppercase",
+            )}
+          >
             {step.role === "minor" ? (
               <>
-                Relative minor of <em className="not-italic text-highlight">{step.of}</em>
+                Relative <Minor />
+              </>
+            ) : step.kind === "sharp" ? (
+              "Circle of fifths"
+            ) : (
+              "Circle of fourths"
+            )}
+            {streak > 0 ? ` · Streak ${streak}` : ""}
+          </p>
+          <h2 className="mt-1 font-display text-2xl leading-snug tracking-tight">
+            {step.role === "minor" ? (
+              <>
+                Relative <Minor /> of <em className="not-italic text-highlight">{step.of}</em>
               </>
             ) : (
               <>
@@ -167,8 +181,18 @@ export function CircleDrill({
         ) : missedFirst && !solved ? (
           <p className="text-xs text-muted-foreground">Right key, wrong count. Try another.</p>
         ) : (
-          <p className="text-xs text-muted-foreground">
-            Name the key, then how many {step.role === "minor" ? "it shares with the major" : step.kind === "sharp" ? "sharps" : "flats"}.
+          <p className="text-sm text-muted-foreground">
+            Name the key, then how many{" "}
+            {step.role === "minor" ? (
+              <>
+                it shares with the <Major />
+              </>
+            ) : step.kind === "sharp" ? (
+              "sharps"
+            ) : (
+              "flats"
+            )}
+            .
           </p>
         )}
 
@@ -184,7 +208,7 @@ export function CircleDrill({
                     disabled={solved}
                     onClick={() => setLetter(item)}
                     className={cn(
-                      "flex h-10 items-center justify-center rounded-md text-sm font-medium transition-colors",
+                      "flex h-12 items-center justify-center rounded-md text-lg font-semibold transition-colors",
                       letter === item
                         ? "bg-highlight text-highlight-foreground ring-2 ring-foreground"
                         : "bg-highlight text-highlight-foreground/80",
@@ -206,7 +230,7 @@ export function CircleDrill({
                     onClick={() => pickAccidental(item.value)}
                     aria-label={item.label}
                     className={cn(
-                      "flex h-10 items-center justify-center rounded-md font-display text-lg transition-colors",
+                      "flex h-12 items-center justify-center rounded-md font-display text-2xl transition-colors",
                       accidental === item.value
                         ? "bg-highlight text-highlight-foreground ring-2 ring-foreground"
                         : "bg-highlight/80 text-highlight-foreground",
@@ -230,7 +254,7 @@ export function CircleDrill({
                     disabled={solved || wrongCounts.includes(n)}
                     onClick={() => setCount(n)}
                     className={cn(
-                      "flex h-10 items-center justify-center rounded-md text-sm font-medium shadow-border transition-colors disabled:opacity-30",
+                      "flex h-12 items-center justify-center rounded-md text-base font-semibold shadow-border transition-colors disabled:opacity-30",
                       wrongCounts.includes(n)
                         ? "bg-foreground/80 text-background line-through"
                         : count === n
@@ -290,14 +314,22 @@ function CircleDiagram({ steps, active }: { steps: CircleStep[]; active: CircleS
     minorsBySlot.set(item.slot, list);
   }
   const center =
-    active?.role === "minor" ? "Minors" : active?.kind === "flat" ? "Fourths" : "Fifths";
+    active?.role === "minor" ? "minor" : active?.kind === "flat" ? "Fourths" : "Fifths";
   const centerHint =
     active?.role === "minor" ? "same signature" : active?.kind === "flat" ? "← flatter" : "sharper →";
 
   return (
     <svg viewBox="0 0 240 240" className="h-full w-full" role="img" aria-label="Circle of fifths">
       <circle cx="120" cy="120" r="46" className="fill-card" />
-      <text x="120" y="116" textAnchor="middle" className="fill-foreground" fontSize="11" fontFamily="Outfit, sans-serif">
+      <text
+        x="120"
+        y="116"
+        textAnchor="middle"
+        className={active?.role === "minor" ? "fill-minor" : "fill-foreground"}
+        fontSize="13"
+        fontWeight={active?.role === "minor" ? 600 : 500}
+        fontFamily="Outfit, sans-serif"
+      >
         {center}
       </text>
       <text x="120" y="132" textAnchor="middle" className="fill-muted-foreground" fontSize="8" fontFamily="Outfit, sans-serif">

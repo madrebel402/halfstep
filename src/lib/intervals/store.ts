@@ -9,7 +9,7 @@ import { setMuted } from "@/lib/audio";
 const STORAGE_KEY = "halfstep-v6";
 
 export type Topic = "intervals" | "chords" | "accidentals" | "scales" | "circle" | "inversions";
-export type Activity = "flash" | "circle" | "scale-lesson" | "chord-lesson";
+export type Activity = "flash" | "circle" | "scale-lesson" | "chord-lesson" | "notes";
 export type FlashTopic = "intervals" | "chords" | "accidentals" | "scales" | "inversions";
 export const FLASH_TOPICS: FlashTopic[] = ["intervals", "chords", "accidentals", "scales", "inversions"];
 
@@ -176,7 +176,10 @@ export const useDrillStore = create<DrillState>((set, get) => ({
             ? parsed.topic
             : "intervals";
         const activity =
-          parsed.activity === "circle" || parsed.activity === "scale-lesson" || parsed.activity === "chord-lesson"
+          parsed.activity === "circle" ||
+          parsed.activity === "scale-lesson" ||
+          parsed.activity === "chord-lesson" ||
+          parsed.activity === "notes"
             ? parsed.activity
             : parsed.topic === "circle"
               ? "circle"

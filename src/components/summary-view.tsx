@@ -1,5 +1,6 @@
 import { ArrowRight, RotateCcw } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
+import { QualityText } from "@/components/quality-text";
 import { Button } from "@/components/ui/button";
 
 export interface SummaryItem {
@@ -37,7 +38,7 @@ export function SummaryView({
             {score}
             <span className="text-muted-foreground"> / {items.length}</span>
           </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <p className="mt-2 text-base text-muted-foreground">
             {score === items.length
               ? "Clean set."
               : score / total >= 0.7
@@ -52,8 +53,12 @@ export function SummaryView({
             <ul className="mt-3 divide-y divide-border">
               {missed.map((item) => (
                 <li key={`${item.id}-${item.name}`} className="flex items-baseline justify-between gap-3 py-2.5">
-                  <span className="text-sm capitalize">{item.name}</span>
-                  <span className="text-right text-sm text-muted-foreground">{item.detail}</span>
+                  <span className="text-base">
+                    <QualityText text={item.name} />
+                  </span>
+                  <span className="text-right text-base text-muted-foreground">
+                    <QualityText text={item.detail} />
+                  </span>
                 </li>
               ))}
             </ul>

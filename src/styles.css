@@ -34,6 +34,8 @@
   --color-lowered-foreground: #2c2414;
   --color-raised: #d9783a;
   --color-raised-foreground: #2c160c;
+  --color-major: #c62828;
+  --color-minor: #1565c0;
 
   --radius-xs: 0.25rem;
   --radius-sm: 0.5rem;
@@ -113,7 +115,35 @@ html.dark {
   --color-highlight: #8aa0b3;
   --color-highlight-foreground: #141210;
   --color-staff: #3a342c;
+  --color-major: #ff6b6b;
+  --color-minor: #7eb6ff;
   color-scheme: dark;
+}
+
+.text-major-on-slate {
+  color: #ffd2ce;
+}
+
+.text-minor-on-slate {
+  color: #d6e8ff;
+}
+
+.text-major-on-primary {
+  color: #ffb4ae;
+}
+
+.text-minor-on-primary {
+  color: #c5dcff;
+}
+
+html.dark .text-major-on-slate,
+html.dark .text-major-on-primary {
+  color: #8e1b1b;
+}
+
+html.dark .text-minor-on-slate,
+html.dark .text-minor-on-primary {
+  color: #0d3f86;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -143,6 +173,10 @@ html.dark {
 
 .safe-dock {
   padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
+
+.step-in {
+  animation: fade-up 320ms var(--ease-out-smooth) both;
 }
 
 @keyframes fade-up {

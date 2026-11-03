@@ -10,6 +10,7 @@ import type { KeyBonus, KeyQuestion, KeyResult } from "@/lib/keys/quiz";
 import { cardPlace, type DeckPlace } from "@/lib/deck";
 import { useDrillStore } from "@/lib/intervals/store";
 import { useAutoAdvance } from "@/lib/use-auto-advance";
+import { QualityText } from "@/components/quality-text";
 import { cn } from "@/lib/utils";
 
 type Phase = "ask" | "solved" | "bonus" | "bonus-solved";
@@ -186,21 +187,34 @@ export function KeysDrill({
           </p>
           {inBonus ? (
             <>
-              <h2 className="mt-2 font-display text-xl leading-snug tracking-tight sm:text-2xl">{bonus?.prompt}</h2>
-              <p className="mt-2 text-sm text-muted-foreground">{question.answer}</p>
+              <h2 className="mt-2 font-display text-2xl leading-snug tracking-tight">
+                <QualityText text={bonus?.prompt ?? ""} />
+              </h2>
+              <p className="mt-2 text-base text-muted-foreground">
+                <QualityText text={question.answer} />
+              </p>
             </>
           ) : question.kind === "memory" ? (
             <>
-              <h2 className="mt-2 font-display text-xl leading-snug tracking-tight sm:text-2xl">
+              <h2 className="mt-2 font-display text-2xl leading-snug tracking-tight">
                 What is this mnemonic used for?
               </h2>
-              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">“{question.promptEmphasis}”</p>
+              <p className="mt-3 text-base leading-relaxed text-muted-foreground">“{question.promptEmphasis}”</p>
             </>
           ) : (
-            <h2 className="mt-2 font-display text-xl leading-snug tracking-tight text-balance sm:text-2xl">
-              {question.promptLead ? `${question.promptLead} ` : null}
-              <em className="not-italic text-highlight">{question.promptEmphasis}</em>
-              {question.promptTail.startsWith("?") ? question.promptTail : ` ${question.promptTail}`}
+            <h2 className="mt-2 font-display text-2xl leading-snug tracking-tight text-balance">
+              {question.promptLead ? <QualityText text={`${question.promptLead} `} /> : null}
+              <em className="not-italic text-highlight">
+                <QualityText text={question.promptEmphasis} />
+              </em>
+              {question.promptTail.startsWith("?") ? (
+                question.promptTail
+              ) : (
+                <>
+                  {" "}
+                  <QualityText text={question.promptTail} />
+                </>
+              )}
             </h2>
           )}
           {asking && question.input === "key-name" && letter ? (
@@ -374,16 +388,16 @@ function NotePicker({
               disabled={locked || state === "correct"}
               onClick={() => onToggle(item)}
               className={cn(
-                "flex h-14 flex-col items-center justify-center rounded-md shadow-border transition-colors duration-150 active:not-disabled:scale-[0.96]",
+                "flex h-16 flex-col items-center justify-center rounded-md shadow-border transition-colors duration-150 active:not-disabled:scale-[0.96]",
                 state === "correct" && "bg-success text-success-foreground",
                 state === "wrong" && "bg-destructive text-destructive-foreground",
-                state === "missed" && "bg-card text-foreground ring-2 ring-highlight",
-                !state && on && "bg-secondary text-foreground ring-2 ring-ring/40",
+                state === "missed" && "bg-card text-foreground ring-2 ring-foreground",
+                !state && on && "bg-secondary text-foreground ring-2 ring-foreground",
                 !state && !on && "bg-card text-card-foreground hover:bg-secondary",
               )}
             >
-              <span className="font-display text-lg leading-none">{item}</span>
-              <span className="mt-1 text-xs opacity-70">{on || state === "missed" ? mark : " "}</span>
+              <span className="font-display text-xl leading-none">{item}</span>
+              <span className="mt-1 text-sm opacity-70">{on || state === "missed" ? mark : " "}</span>
             </button>
           );
         })}

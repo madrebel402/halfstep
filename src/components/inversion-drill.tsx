@@ -1,10 +1,11 @@
 import { useRef, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
-import { NoteRow, alterFill, alterMotion } from "@/components/altered-note";
+import { NoteRow } from "@/components/altered-note";
 import { CorrectBurst } from "@/components/correct-burst";
 import { NoteKeypad } from "@/components/keypad";
 import { Button } from "@/components/ui/button";
+import { QualityText } from "@/components/quality-text";
 import { cardPlace, type DeckPlace } from "@/lib/deck";
 import { accidentalGlyph, type Letter } from "@/lib/intervals/catalog";
 import { useDrillStore } from "@/lib/intervals/store";
@@ -88,28 +89,71 @@ export function InversionDrill({
     finish(wrong.length === 0 && !missedFirst);
   }
 
-  function fill(letter: Letter, accidental = 0) {
-    if (solved || marks[focused] === "correct") return;
+  function writeLetter(letter: Letter) {
+    if (solved) return;
+    const open = (i: number) => marks[i] !== "correct";
+    const focusedEmpty = open(focused) && !slots[focused];
+    const empty = slots.findIndex((slot, i) => open(i) && !slot);
+    const target = focusedEmpty ? focused : empty >= 0 ? empty : marks[focused] === "correct" ? -1 : focused;
+    if (target < 0) return;
     setSlots((prev) => {
       const next = [...prev];
-      next[focused] = { letter, accidental };
+      next[target] = { letter, accidental: 0 };
       return next;
     });
     setMarks((prev) => {
       const next = [...prev];
-      next[focused] = null;
+      next[target] = null;
+      return next;
+    });
+    const nextEmpty = slots.findIndex((slot, i) => i > target && open(i) && !slot);
+    setFocused(nextEmpty >= 0 ? nextEmpty : target);
+  }
+
+  function writeAccidental(value: number) {
+    if (solved) return;
+    const target =
+      slots[focused] && marks[focused] !== "correct"
+        ? focused
+        : ([...slots.keys()].reverse().find((i) => marks[i] !== "correct" && slots[i]) ?? -1);
+    if (target < 0 || !slots[target]) return;
+    const current = slots[target];
+    if (!current) return;
+    setSlots((prev) => {
+      const next = [...prev];
+      next[target] = { letter: current.letter, accidental: current.accidental === value ? 0 : value };
+      return next;
+    });
+    setMarks((prev) => {
+      const next = [...prev];
+      next[target] = null;
       return next;
     });
   }
 
-  function onLetter(letter: Letter) {
-    fill(letter, 0);
-  }
-
-  function onAccidental(value: number) {
+  function fillDelete() {
+    if (solved) return;
     const current = slots[focused];
-    if (!current) return;
-    fill(current.letter, current.accidental === value ? 0 : value);
+    if (current && marks[focused] !== "correct") {
+      if (current.accidental) {
+        writeAccidental(current.accidental);
+        return;
+      }
+      setSlots((prev) => {
+        const next = [...prev];
+        next[focused] = null;
+        return next;
+      });
+      return;
+    }
+    const prevIndex = [...slots.keys()].reverse().find((i) => i < focused && marks[i] !== "correct");
+    if (prevIndex === undefined) return;
+    setFocused(prevIndex);
+    setSlots((prev) => {
+      const next = [...prev];
+      next[prevIndex] = null;
+      return next;
+    });
   }
 
   function submitBuild() {
@@ -150,12 +194,18 @@ export function InversionDrill({
             ) : (
               <>
                 {question.inversion === 0 ? "Spell " : `Spell the ${inversionLabel(question.inversion).toLowerCase()} inversion of `}
-                <em className="not-italic text-highlight">{question.chordName}</em>
+                <em className="not-italic text-highlight">
+                  <QualityText text={question.chordName} />
+                </em>
                 {question.inversion === 0 ? " in root position" : ""}
               </>
             )}
           </h2>
-          {naming ? <p className="mt-2 text-sm text-muted-foreground">{question.chordName}</p> : null}
+          {naming ? (
+            <p className="mt-2 text-base text-muted-foreground">
+              <QualityText text={question.chordName} />
+            </p>
+          ) : null}
           {!naming ? <p className="mt-2 text-sm text-muted-foreground">Lowest note first.</p> : null}
         </div>
         {solved && !skipCorrect ? (
@@ -178,7 +228,7 @@ export function InversionDrill({
                 disabled={solved || wrong.includes(item.value)}
                 onClick={() => pickName(item.value)}
                 className={cn(
-                  "flex h-12 items-center justify-center rounded-md text-sm font-medium shadow-border transition-colors disabled:opacity-40",
+                  "flex h-14 items-center justify-center rounded-md text-lg font-semibold shadow-border transition-colors disabled:opacity-40",
                   solved && question.inversion === item.value
                     ? "bg-success text-success-foreground"
                     : wrong.includes(item.value)
@@ -199,20 +249,19 @@ export function InversionDrill({
                   type="button"
                   onClick={() => setFocused(i)}
                   className={cn(
-                    "flex h-14 items-center justify-center rounded-lg font-display text-xl transition-transform duration-200",
-                    slot && alterMotion(slot.accidental),
-                    focused === i && "ring-2 ring-foreground",
+                    "flex h-16 items-center justify-center rounded-lg font-display text-2xl",
+                    focused === i && !solved && "relative z-10 ring-[3px] ring-foreground ring-offset-2 ring-offset-background",
+                    focused === i && !solved && !marks[i] && "bg-card",
                     marks[i] === "correct" && "bg-success text-success-foreground",
                     marks[i] === "wrong" && "bg-destructive text-destructive-foreground",
-                    !marks[i] && slot && slot.accidental !== 0 && alterFill(slot.accidental),
-                    !marks[i] && !(slot && slot.accidental) && "bg-card shadow-border",
+                    !marks[i] && focused !== i && "bg-secondary shadow-border",
                   )}
                 >
                   {slot ? `${slot.letter}${accidentalGlyph(slot.accidental)}` : ""}
                 </button>
               ))}
             </div>
-            <NoteKeypad disabled={solved} onLetter={onLetter} onAccidental={onAccidental} onDelete={() => fillDelete()} />
+            <NoteKeypad disabled={solved} onLetter={writeLetter} onAccidental={writeAccidental} onDelete={fillDelete} />
           </>
         )}
       </article>
@@ -233,18 +282,4 @@ export function InversionDrill({
       </div>
     </div>
   );
-
-  function fillDelete() {
-    if (solved) return;
-    const current = slots[focused];
-    if (current?.accidental) {
-      fill(current.letter, 0);
-      return;
-    }
-    setSlots((prev) => {
-      const next = [...prev];
-      next[focused] = null;
-      return next;
-    });
-  }
 }

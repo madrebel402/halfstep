@@ -7,6 +7,7 @@ import { DrillView } from "@/components/drill-view";
 import { InversionDrill } from "@/components/inversion-drill";
 import { KeysDrill } from "@/components/keys-drill";
 import { MixedDrill } from "@/components/mixed-drill";
+import { NotesLesson, type NotesPractice } from "@/components/notes-lesson";
 import { ParallelDrill } from "@/components/parallel-drill";
 import { ScaleDrill } from "@/components/scale-drill";
 import { SettingsView } from "@/components/settings-view";
@@ -38,6 +39,7 @@ type Screen =
   | "inversions"
   | "parallel"
   | "chord-lesson"
+  | "notes"
   | "summary"
   | "circle"
   | "mix";
@@ -139,6 +141,26 @@ function Home() {
     setScreen("mix");
   }
 
+  function practiceFromNotes(kind: NotesPractice) {
+    if (kind === "scale-lesson") {
+      useDrillStore.getState().setActivity("scale-lesson");
+      setRound("lesson");
+      setScreen("parallel");
+      return;
+    }
+    const topic: FlashTopic =
+      kind === "keys" ? "accidentals" : kind === "inversions" ? "inversions" : kind === "scales" ? "scales" : "intervals";
+    const store = useDrillStore.getState();
+    store.setAllFlashTopics(false);
+    store.toggleFlashTopic(topic);
+    setPracticeFilter(null);
+    setRound("single");
+    if (topic === "accidentals") startKeys();
+    else if (topic === "scales") startScales();
+    else if (topic === "inversions") startInversions();
+    else startIntervals();
+  }
+
   function start(ids?: string[]) {
     setPracticeFilter(null);
     const { activity, flashTopics } = useDrillStore.getState();
@@ -156,6 +178,11 @@ function Home() {
     if (activity === "chord-lesson") {
       setRound("lesson");
       setScreen("chord-lesson");
+      return;
+    }
+    if (activity === "notes") {
+      setRound("lesson");
+      setScreen("notes");
       return;
     }
     const topics = flashTopics.length ? flashTopics : (["intervals"] as FlashTopic[]);
@@ -296,6 +323,7 @@ function Home() {
       {screen === "chord-lesson" ? (
         <ChordLesson onExit={() => setScreen("start")} onPractice={(filter) => practiceChords(filter)} />
       ) : null}
+      {screen === "notes" ? <NotesLesson onExit={() => setScreen("start")} onPractice={practiceFromNotes} /> : null}
       {screen === "circle" ? (
         <CircleDrill onlyIds={circleIds} onExit={() => setScreen("start")} onDone={finishCircle} />
       ) : null}

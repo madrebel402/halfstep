@@ -16,9 +16,12 @@ export function alterFill(accidental: number): string {
 export function NoteRow({
   notes,
   className,
+  shift = false,
 }: {
   notes: { letter: string; accidental: number }[];
   className?: string;
+  /** Move and color a note only when the accidental is an alteration that builds the scale. */
+  shift?: boolean;
 }) {
   return (
     <span className={cn("inline-flex flex-wrap items-center gap-1.5", className)}>
@@ -26,9 +29,9 @@ export function NoteRow({
         <span
           key={`${note.letter}${note.accidental}-${i}`}
           className={cn(
-            "inline-flex min-w-8 items-center justify-center rounded-md px-1.5 py-0.5 transition-transform duration-200",
-            alterMotion(note.accidental),
-            note.accidental !== 0 && alterFill(note.accidental),
+            "inline-flex min-w-8 items-center justify-center rounded-md px-1.5 py-0.5 text-lg transition-transform duration-200",
+            shift && alterMotion(note.accidental),
+            shift && note.accidental !== 0 && alterFill(note.accidental),
           )}
         >
           {note.letter}

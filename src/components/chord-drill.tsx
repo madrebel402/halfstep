@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
-import { NoteRow, alterFill, alterMotion } from "@/components/altered-note";
+import { NoteRow } from "@/components/altered-note";
 import { CorrectBurst } from "@/components/correct-burst";
 import { NoteKeypad } from "@/components/keypad";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ import { accidentalGlyph, type Letter } from "@/lib/intervals/catalog";
 import { cardPlace, type DeckPlace } from "@/lib/deck";
 import { useDrillStore } from "@/lib/intervals/store";
 import { useAutoAdvance } from "@/lib/use-auto-advance";
+import { QualityText } from "@/components/quality-text";
 import { cn } from "@/lib/utils";
 
 type Slot = { letter: Letter | null; accidental: number };
@@ -84,8 +85,9 @@ export function ChordDrill({
       checkName(letter, 0, quality);
       return;
     }
+    const focusedEmpty = !locked[focused] && slots[focused].letter === null;
     const empty = slots.findIndex((slot, i) => !locked[i] && slot.letter === null);
-    const target = empty >= 0 ? empty : locked[focused] ? -1 : focused;
+    const target = focusedEmpty ? focused : empty >= 0 ? empty : locked[focused] ? -1 : focused;
     if (target < 0) return;
     setSlots((prev) => {
       const next = [...prev];
@@ -260,7 +262,9 @@ export function ChordDrill({
             {build ? "Build this chord" : "Name this chord"}
           </p>
           {build ? (
-            <h2 className="mt-2 font-display text-2xl leading-snug tracking-tight">{question.chord.name}</h2>
+            <h2 className="mt-2 font-display text-2xl leading-snug tracking-tight">
+              <QualityText text={question.chord.name} />
+            </h2>
           ) : (
             <h2 className="mt-3 font-display text-2xl leading-snug tracking-tight">
               <NoteRow notes={question.chord.notes} />
@@ -281,25 +285,22 @@ export function ChordDrill({
                     disabled={solved || locked[i]}
                     onClick={() => setFocused(i)}
                     className={cn(
-                      "flex min-h-16 flex-col items-center justify-center rounded-lg px-1 py-2 shadow-border transition-[transform,background-color,color] duration-200",
-                      slot.letter && alterMotion(slot.accidental),
+                      "flex min-h-16 flex-col items-center justify-center rounded-lg px-1 py-2 shadow-border",
                       mark === "correct" && "bg-success text-success-foreground",
                       mark === "wrong" && "bg-destructive text-destructive-foreground",
-                      mark === null && focused === i && "ring-2 ring-ring/40",
-                      mark === null && slot.letter && slot.accidental !== 0 && alterFill(slot.accidental),
-                      mark === null && !(slot.letter && slot.accidental) && focused === i && "bg-secondary text-foreground",
-                      mark === null && !(slot.letter && slot.accidental) && focused !== i && "bg-secondary/60 text-foreground",
+                      mark === null && focused === i && "relative z-10 bg-card ring-[3px] ring-foreground ring-offset-2 ring-offset-background",
+                      mark === null && focused !== i && "bg-secondary text-foreground",
                     )}
                   >
-                    <span className="text-xs opacity-70">{SLOT_LABELS[i]}</span>
-                    <span className="mt-1 font-display text-xl">{slot.letter ? slotLabel(slot) : "·"}</span>
+                    <span className="text-sm opacity-70">{SLOT_LABELS[i]}</span>
+                    <span className="mt-1 font-display text-2xl">{slot.letter ? slotLabel(slot) : "·"}</span>
                   </button>
                 );
               })}
             </div>
           ) : (
-            <p className={cn("mt-5 font-display text-2xl", missedFirst && !solved && "text-destructive")}>
-              {named || "·"}
+            <p className={cn("mt-5 font-display text-3xl", missedFirst && !solved && "text-destructive")}>
+              {named ? <QualityText text={named} /> : "·"}
             </p>
           )}
 
@@ -330,11 +331,11 @@ export function ChordDrill({
                     type="button"
                     onClick={() => pickQuality(item)}
                     className={cn(
-                      "flex h-11 items-center justify-center rounded-md px-1 text-sm font-medium shadow-border transition-colors duration-150 active:scale-[0.96]",
-                      quality === item ? "bg-primary text-primary-foreground" : "bg-card hover:bg-secondary",
+                      "flex h-12 items-center justify-center rounded-md px-1 text-base font-semibold leading-none shadow-border transition-colors duration-150 active:scale-[0.96]",
+                      quality === item ? "bg-primary" : "bg-card hover:bg-secondary",
                     )}
                   >
-                    {QUALITY_META[item].button}
+                    <QualityText text={QUALITY_META[item].button} tone={quality === item ? "primary" : "paper"} />
                   </button>
                 ))}
               </div>

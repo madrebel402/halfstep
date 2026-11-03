@@ -4,7 +4,7 @@ import type { Letter } from "@/lib/intervals/catalog";
 import { cn } from "@/lib/utils";
 
 const KEY =
-  "flex h-11 items-center justify-center rounded-md bg-card text-sm font-medium shadow-border transition-colors duration-150 hover:bg-secondary active:not-disabled:scale-[0.96] disabled:opacity-40";
+  "flex h-12 items-center justify-center rounded-md bg-card text-xl font-semibold shadow-border transition-colors duration-150 hover:bg-secondary active:not-disabled:scale-[0.96] disabled:opacity-40";
 
 const ACCIDENTALS: { value: number; glyph: string; label: string }[] = [
   { value: 2, glyph: "𝄪", label: "Double sharp" },
@@ -42,7 +42,7 @@ export function NoteKeypad({
                   type="button"
                   disabled={disabled}
                   onClick={() => onAccidental(item.value)}
-                  className={cn(KEY, "font-display text-lg")}
+                  className={cn(KEY, "font-display text-2xl")}
                   aria-label={item.label}
                 >
                   {item.glyph}
@@ -97,7 +97,7 @@ export function ChoicePad({
             onClick={() => onPick(option.value)}
             className={cn(
               KEY,
-              "min-h-11 px-2 text-center leading-snug",
+              "min-h-12 px-2 text-center text-lg font-semibold leading-none",
               showCorrect && "bg-success text-success-foreground hover:bg-success",
               missed && "bg-foreground text-primary-foreground hover:bg-foreground",
               solved && !showCorrect && !missed && "text-muted-foreground",

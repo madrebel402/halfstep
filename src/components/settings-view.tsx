@@ -40,7 +40,7 @@ export function SettingsView({ onBack }: { onBack: () => void }) {
         <div className="flex flex-col gap-3 rounded-2xl bg-card p-4 shadow-border">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-sm font-medium">Night mode</p>
+              <p className="text-base font-medium">Night mode</p>
               <p className="mt-1 text-xs text-muted-foreground">Easier on the eyes after dark.</p>
             </div>
             <button
@@ -66,7 +66,7 @@ export function SettingsView({ onBack }: { onBack: () => void }) {
         <div className="flex flex-col gap-3 rounded-2xl bg-card p-4 shadow-border">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-sm font-medium">Auto-advance</p>
+              <p className="text-base font-medium">Auto-advance</p>
               <p className="mt-1 text-xs text-muted-foreground">
                 {autoAdvance
                   ? autoSeconds === 0

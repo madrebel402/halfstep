@@ -11,6 +11,7 @@ import { useDrillStore } from "@/lib/intervals/store";
 import { useAutoAdvance } from "@/lib/use-auto-advance";
 import { buttonLabel, QUALITY_META, qualitiesFor, type ScaleId } from "@/lib/scales/catalog";
 import type { ScaleQuestion, ScaleResult } from "@/lib/scales/quiz";
+import { QualityText } from "@/components/quality-text";
 import { cn } from "@/lib/utils";
 
 type Slot = { letter: Letter | null; accidental: number };
@@ -76,8 +77,9 @@ export function ScaleDrill({
       checkName(letter, 0, quality);
       return;
     }
+    const focusedEmpty = !locked[focused] && slots[focused].letter === null;
     const empty = slots.findIndex((slot, i) => !locked[i] && slot.letter === null);
-    const target = empty >= 0 ? empty : locked[focused] ? -1 : focused;
+    const target = focusedEmpty ? focused : empty >= 0 ? empty : locked[focused] ? -1 : focused;
     if (target < 0) return;
     setSlots((prev) => {
       const next = [...prev];
@@ -248,7 +250,11 @@ export function ScaleDrill({
             {build ? "Build this scale" : "Name this scale"}
           </p>
           <h2 className="mt-2 font-display text-2xl leading-snug tracking-tight">
-            {build ? question.scale.name : <NoteRow notes={question.scale.notes} />}
+            {build ? (
+              <QualityText text={question.scale.name} />
+            ) : (
+              <NoteRow notes={question.scale.notes} shift />
+            )}
           </h2>
           <p className="mt-2 text-sm text-muted-foreground">
             {build ? `Enter all ${noteCount} notes, tonic first.` : "Root, then the type."}
@@ -265,25 +271,25 @@ export function ScaleDrill({
                     disabled={solved || locked[i]}
                     onClick={() => setFocused(i)}
                     className={cn(
-                      "flex min-h-14 flex-col items-center justify-center rounded-lg px-0.5 py-2 shadow-border transition-[transform,background-color,color] duration-200",
+                      "flex min-h-16 flex-col items-center justify-center rounded-lg px-0.5 py-2 shadow-border transition-[transform,background-color,color] duration-200",
                       slot.letter && alterMotion(slot.accidental),
                       mark === "correct" && "bg-success text-success-foreground",
                       mark === "wrong" && "bg-destructive text-destructive-foreground",
-                      mark === null && focused === i && "ring-2 ring-ring/40",
+                      mark === null && focused === i && "relative z-10 ring-[3px] ring-foreground ring-offset-2 ring-offset-background",
                       mark === null && slot.letter && slot.accidental !== 0 && alterFill(slot.accidental),
-                      mark === null && !(slot.letter && slot.accidental) && focused === i && "bg-secondary text-foreground",
-                      mark === null && !(slot.letter && slot.accidental) && focused !== i && "bg-secondary/60 text-foreground",
+                      mark === null && !(slot.letter && slot.accidental) && focused === i && "bg-card text-foreground",
+                      mark === null && !(slot.letter && slot.accidental) && focused !== i && "bg-secondary text-foreground",
                     )}
                   >
-                    <span className="text-xs opacity-70">{i + 1}</span>
-                    <span className="mt-1 font-display text-lg">{slot.letter ? slotLabel(slot) : "·"}</span>
+                    <span className="text-sm opacity-70">{i + 1}</span>
+                    <span className="mt-1 font-display text-xl">{slot.letter ? slotLabel(slot) : "·"}</span>
                   </button>
                 );
               })}
             </div>
           ) : (
-            <p className={cn("mt-5 font-display text-2xl", missedFirst && !solved && "text-destructive")}>
-              {named || "·"}
+            <p className={cn("mt-5 font-display text-3xl", missedFirst && !solved && "text-destructive")}>
+              {named ? <QualityText text={named} /> : "·"}
             </p>
           )}
 
@@ -309,11 +315,11 @@ export function ScaleDrill({
                     type="button"
                     onClick={() => pickQuality(item)}
                     className={cn(
-                      "flex h-11 items-center justify-center rounded-md px-1 text-sm font-medium shadow-border transition-colors duration-150 active:scale-[0.96]",
-                      quality === item ? "bg-primary text-primary-foreground" : "bg-card hover:bg-secondary",
+                      "flex h-12 items-center justify-center rounded-md px-2 text-center text-base font-semibold leading-tight shadow-border transition-colors duration-150 active:scale-[0.96]",
+                      quality === item ? "bg-primary" : "bg-card hover:bg-secondary",
                     )}
                   >
-                    {buttonLabel(item, filters.length ? filters : ["major", "minor"])}
+                    <QualityText text={buttonLabel(item, filters.length ? filters : ["major", "minor"])} tone={quality === item ? "primary" : "paper"} />
                   </button>
                 ))}
               </div>

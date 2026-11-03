@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
+import { QualityText } from "@/components/quality-text";
 import { Button } from "@/components/ui/button";
 import { stopDrone } from "@/lib/audio";
 import {
@@ -60,8 +61,12 @@ export function ParallelDrill({
       </header>
 
       <div className="mt-4 flex min-h-0 flex-1 flex-col">
-        <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">From C major</p>
-        <h2 className="mt-1 font-display text-2xl leading-snug tracking-tight">Let’s make C {kind.label}.</h2>
+        <p className="text-sm font-medium tracking-wide text-muted-foreground">
+          From C <QualityText text="major" />
+        </p>
+        <h2 className="mt-1 font-display text-2xl leading-snug tracking-tight">
+          Let’s make C <QualityText text={kind.label} />.
+        </h2>
 
         <div className="mt-4 grid grid-cols-7 gap-1 px-0.5 py-3">
           {DEGREES.map((item) => (
@@ -71,9 +76,15 @@ export function ParallelDrill({
 
         {degree === "done" ? (
           <div className="mt-4 rounded-2xl bg-card px-4 py-4 shadow-border">
-            <p className="font-display text-xl tracking-tight">C {kind.label}</p>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{kind.character}</p>
-            <p className="mt-3 text-sm leading-relaxed">{changeSentence(kind)}</p>
+            <p className="font-display text-2xl tracking-tight">
+              C <QualityText text={kind.label} />
+            </p>
+            <p className="mt-2 text-base leading-relaxed text-muted-foreground">
+              <QualityText text={kind.character} />
+            </p>
+            <p className="mt-3 text-base leading-relaxed">
+              <QualityText text={changeSentence(kind)} />
+            </p>
           </div>
         ) : (
           <StepCopy kind={kind} degree={degree} />
@@ -97,7 +108,7 @@ function NotePill({ kind, degree, current }: { kind: ScaleKind; degree: Degree; 
   return (
     <div
       className={cn(
-        "flex h-14 items-center justify-center rounded-lg text-sm font-medium transition-transform duration-200",
+        "flex h-16 items-center justify-center rounded-lg text-base font-semibold transition-transform duration-200",
         alteration === -1 && "translate-y-1.5",
         alteration === 1 && "-translate-y-1.5",
         active && alteration === -1 && "bg-lowered text-lowered-foreground ring-2 ring-foreground",
@@ -124,11 +135,15 @@ function StepCopy({ kind, degree }: { kind: ScaleKind; degree: Degree }) {
       <p className="mt-2 font-display text-2xl tracking-tight">
         {alteration === 0 ? `${before} stays the same.` : alteration === -1 ? `Flat the ${before}.` : `Sharp the ${before}.`}
       </p>
-      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+      <p className="mt-2 text-base leading-relaxed text-muted-foreground">
         {alteration === 0
           ? degree === 1
             ? "It is the root of both scales."
-            : `C ${kind.label} keeps this note.`
+            : (
+              <>
+                C <QualityText text={kind.label} /> keeps this note.
+              </>
+            )
           : `${before} becomes ${after}.`}
       </p>
     </div>
